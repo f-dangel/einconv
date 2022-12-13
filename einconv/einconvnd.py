@@ -47,7 +47,9 @@ def einconvNd(
 
     Raises:
         NotImplementedError: If the supplied hyperparameters are not supported.
-        ValueError:
+        ValueError: If bias has incorrect shape.
+        ValueError: If weight dimension is incorrect.
+        ValueError: If weight shape is invalid.
     """
     if isinstance(padding, str):
         raise NotImplementedError("String-valued padding not yet supported.")
@@ -74,6 +76,17 @@ def einconvNd(
         input = pad(input, tuple(paddings))
 
     (batch_size, in_channels), input_sizes = input.shape[:2], input.shape[2:]
+
+    if weight.shape[0] % groups != 0:
+        raise ValueError(
+            f"Groups ({groups}) must divide out_channels ({weight.shape[0]})."
+        )
+
+    if weight.shape[1] * groups != in_channels:
+        raise ValueError(
+            f"Kernel dimension 1 ({weight.shape[1]}) multiplied by groups ({groups})"
+            + f" must equal in_channels ({in_channels})."
+        )
 
     index_patterns: List[Tensor] = [
         conv_index_pattern(
