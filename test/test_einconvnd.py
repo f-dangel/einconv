@@ -1,7 +1,9 @@
 """Tests for ``einconv/einconvnd``."""
 
+from test.utils import report_nonclose
+
 from pytest import mark
-from torch import allclose, manual_seed, rand
+from torch import manual_seed, rand
 from torch.nn.functional import conv1d
 
 from einconv.einconvnd import einconv1d
@@ -18,12 +20,12 @@ CONV_1D_CASES = [
         # stride, padding, dilation, groups
         "conv_kwargs": {},
     },
-    # non-default stride
+    # non-default stride, bias
     {
         "seed": 0,
         "input_fn": lambda: rand(2, 3, 50),
         "weight_fn": lambda: rand(4, 3, 5),
-        "bias_fn": lambda: None,
+        "bias_fn": lambda: rand(4),
         "conv_kwargs": {
             "stride": 2,
             "padding": 0,
@@ -43,6 +45,6 @@ def test_einconv1d(case):
     bias = case["bias_fn"]()
 
     conv1d_output = conv1d(x, weight, bias=bias, **case["conv_kwargs"])
-    einconv1d_output = einconv1d(x, weight, **case["conv_kwargs"])
+    einconv1d_output = einconv1d(x, weight, bias=bias, **case["conv_kwargs"])
 
-    assert allclose(conv1d_output, einconv1d_output)
+    report_nonclose(conv1d_output, einconv1d_output)

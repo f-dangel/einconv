@@ -28,8 +28,6 @@ def einconv1d(
         ValueError: If the input is not a 3d tensor, or the weight is not a 3d tensor.
         NotImplementedError: If the supplied hyperparameters are not supported.
     """
-    if bias is not None:
-        raise NotImplementedError
     if groups != 1:
         raise NotImplementedError
     if isinstance(padding, str):
@@ -49,4 +47,9 @@ def einconv1d(
         input_size, kernel_size, stride=stride, dilation=dilation, device=input.device
     ).to(input.dtype)
 
-    return einsum("nix,kyx,oik->noy", input, index_pattern, weight)
+    output = einsum("nix,kyx,oik->noy", input, index_pattern, weight)
+
+    if bias is not None:
+        output += bias.unsqueeze(0).unsqueeze(-1).expand_as(output)
+
+    return output
