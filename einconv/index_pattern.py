@@ -36,7 +36,11 @@ def conv_index_pattern(
         entry (``False`` otherwise).
     """
     in_idxs = (
-        arange(end=input_size, dtype=torch.float32, device=device)
+        arange(
+            end=input_size,
+            dtype=torch.int32 if dilation == 1 else torch.float32,
+            device=device,
+        )
         .unsqueeze(0)
         .unsqueeze(0)
     )  # shape [N=1, C_in=1, input_size]
