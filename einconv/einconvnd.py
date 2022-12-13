@@ -71,9 +71,9 @@ def einconv2d(
     input: Tensor,
     weight: Tensor,
     bias: Union[Tensor, None] = None,
-    stride: Union[int, Tuple[int]] = 1,
-    padding: Union[int, str, Tuple[int]] = 0,
-    dilation: Union[int, Tuple[int]] = 1,
+    stride: Union[int, Tuple[int, int]] = 1,
+    padding: Union[int, str, Tuple[int, int]] = 0,
+    dilation: Union[int, Tuple[int, int]] = 1,
     groups: int = 1,
 ):
     """Equivalent of ``torch.nn.functional.conv2d``, but uses tensor contractions.
@@ -146,9 +146,9 @@ def einconv3d(
     input: Tensor,
     weight: Tensor,
     bias: Union[Tensor, None] = None,
-    stride: Union[int, Tuple[int]] = 1,
-    padding: Union[int, str, Tuple[int]] = 0,
-    dilation: Union[int, Tuple[int]] = 1,
+    stride: Union[int, Tuple[int, int, int]] = 1,
+    padding: Union[int, str, Tuple[int, int, int]] = 0,
+    dilation: Union[int, Tuple[int, int, int]] = 1,
     groups: int = 1,
 ):
     """Equivalent of ``torch.nn.functional.conv3d``, but uses tensor contractions.
