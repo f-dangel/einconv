@@ -1,9 +1,10 @@
 """PyTorch modules and functionals implementing N-dimensional convolution."""
 
-from typing import Union
+from typing import Tuple, Union
 
 from torch import Tensor, einsum
 from torch.nn.functional import pad
+from torch.nn.modules.utils import _single
 
 from einconv.index_pattern import conv_index_pattern
 
@@ -12,9 +13,9 @@ def einconv1d(
     input: Tensor,
     weight: Tensor,
     bias: Union[Tensor, None] = None,
-    stride: int = 1,
-    padding: Union[int, str] = 0,
-    dilation: int = 1,
+    stride: Union[int, Tuple[int]] = 1,
+    padding: Union[int, str, Tuple[int]] = 0,
+    dilation: Union[int, Tuple[int]] = 1,
     groups: int = 1,
 ):
     """Equivalent of ``torch.nn.functionals.conv1d``, but uses tensor contractions.
@@ -31,14 +32,23 @@ def einconv1d(
     if isinstance(padding, str):
         raise NotImplementedError("String-valued padding not yet supported.")
 
-    if padding != 0:
-        input = pad(input, (padding, padding))
+    # convert into tuple format
+    t_stride: Tuple[int] = _single(stride)
+    t_padding: Tuple[int] = _single(padding)
+    t_dilation: Tuple[int] = _single(dilation)
+
+    if padding != (0,):
+        input = pad(input, 2 * t_padding)
 
     batch_size, in_channels, input_size = input.shape
     out_channels, _, kernel_size = weight.shape
 
     index_pattern = conv_index_pattern(
-        input_size, kernel_size, stride=stride, dilation=dilation, device=input.device
+        input_size,
+        kernel_size,
+        stride=t_stride[0],
+        dilation=t_dilation[0],
+        device=input.device,
     ).to(input.dtype)
 
     output = einsum(

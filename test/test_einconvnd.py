@@ -44,6 +44,14 @@ CONV_1D_CASES = [
         "bias_fn": lambda: rand(4),
         "conv_kwargs": {"padding": 2},
     },
+    # non-default bias, padding, stride, dilation specified as tuple
+    {
+        "seed": 0,
+        "input_fn": lambda: rand(2, 3, 50),
+        "weight_fn": lambda: rand(4, 3, 5),
+        "bias_fn": lambda: rand(4),
+        "conv_kwargs": {"padding": (2,), "stride": (3,), "dilation": (1,)},
+    },
 ]
 
 
