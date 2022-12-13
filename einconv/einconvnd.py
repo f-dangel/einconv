@@ -1,237 +1,181 @@
 """PyTorch modules and functionals implementing N-dimensional convolution."""
 
-from typing import Tuple, Union
+from typing import List, Tuple, Union
 
 from torch import Tensor, einsum
 from torch.nn.functional import pad
-from torch.nn.modules.utils import _pair, _single, _triple
 
 from einconv.index_pattern import conv_index_pattern
+from einconv.utils import _tuple
 
 
-def einconv1d(
+def einconvNd(
     input: Tensor,
     weight: Tensor,
     bias: Union[Tensor, None] = None,
-    stride: Union[int, Tuple[int]] = 1,
-    padding: Union[int, str, Tuple[int]] = 0,
-    dilation: Union[int, Tuple[int]] = 1,
+    stride: Union[int, Tuple[int, ...]] = 1,
+    padding: Union[int, str, Tuple[int, ...]] = 0,
+    dilation: Union[int, Tuple[int, ...]] = 1,
     groups: int = 1,
 ):
-    """Equivalent of ``torch.nn.functional.conv1d``, but uses tensor contractions.
+    """Generalization of ``torch.nn.functional.conv{1,2,3}d`` to ``N``d.
+
+    ``N`` is determined from the input tensor: It's first axis is the batch dimension,
+    the second axis the channel dimension, and the remaining number of dimensions is
+    interpreted as spatial dimension (with number of spatial dimensions ``N``)
 
     Args:
-        See documentation of ``torch.nn.functional.conv1d``. # noqa: DAR101
+        input: Input of the convolution. Has shape ``[batch_size,
+            in_channels, *]`` where ``*`` can be an arbitrary shape. The
+            convolution dimension is ``len(*)``.
+        weight: Kernel of the convolution. Has shape ``[out_channels,
+            in_channels / groups, *]`` where ``*`` contains the kernel sizes and has
+            length ``N``.
+        bias: Optional bias vector of the convolution. Has shape ``[out_channels]``.
+            Default: ``None``.
+        stride: Stride of the convolution. Can be a single integer (shared along all
+            spatial dimensions), or an ``N``-tuple of integers. Default: ``1``.
+        padding: Padding of the convolution. Can be a single integer (shared along all
+            spatial dimensions), or an ``N``-tuple of integers. Default: ``0``.
+        dilation: Dilation of the convolution. Can be a single integer (shared along all
+            spatial dimensions), or an ``N``-tuple of integers. Default: ``1``.
+        groups: How to split the input into groups. Default: ``1``.
 
     Returns:
-        Result of the convolution.
+        Result of the convolution. Has shape ``[batch_size, out_channels, *]`` where
+        ``*`` is the the spatial output dimension shape.
 
     Raises:
         NotImplementedError: If the supplied hyperparameters are not supported.
+        ValueError: If bias has incorrect shape.
+        ValueError: If weight dimension is incorrect.
+        ValueError: If weight shape is invalid.
     """
     if isinstance(padding, str):
         raise NotImplementedError("String-valued padding not yet supported.")
 
-    # convert into tuple format
-    t_stride: Tuple[int] = _single(stride)
-    t_padding: Tuple[int] = _single(padding)
-    t_dilation: Tuple[int] = _single(dilation)
+    N = input.dim() - 2
 
-    if padding != (0,):
-        input = pad(input, 2 * t_padding)
-
-    batch_size, in_channels, input_size = input.shape
-    out_channels, _, kernel_size = weight.shape
-
-    index_pattern = conv_index_pattern(
-        input_size,
-        kernel_size,
-        stride=t_stride[0],
-        dilation=t_dilation[0],
-        device=input.device,
-    )
-
-    output = einsum(
-        "ngix,kyx,goik->ngoy",
-        input.reshape(batch_size, groups, in_channels // groups, input_size),
-        index_pattern.to(input.dtype),
-        weight.reshape(
-            groups, out_channels // groups, in_channels // groups, kernel_size
-        ),
-    )
-    output = output.flatten(start_dim=1, end_dim=2)
-
-    if bias is not None:
-        output += bias.unsqueeze(0).unsqueeze(-1).expand_as(output)
-
-    return output
-
-
-def einconv2d(
-    input: Tensor,
-    weight: Tensor,
-    bias: Union[Tensor, None] = None,
-    stride: Union[int, Tuple[int, int]] = 1,
-    padding: Union[int, str, Tuple[int, int]] = 0,
-    dilation: Union[int, Tuple[int, int]] = 1,
-    groups: int = 1,
-):
-    """Equivalent of ``torch.nn.functional.conv2d``, but uses tensor contractions.
-
-    Args:
-        See documentation of ``torch.nn.functional.conv2d``. # noqa: DAR101
-
-    Returns:
-        Result of the convolution.
-
-    Raises:
-        NotImplementedError: If the supplied hyperparameters are not supported.
-    """
-    if isinstance(padding, str):
-        raise NotImplementedError("String-valued padding not yet supported.")
-
-    # convert into tuple format
-    t_stride: Tuple[int, int] = _pair(stride)
-    t_padding: Tuple[int, int] = _pair(padding)
-    t_dilation: Tuple[int, int] = _pair(dilation)
-
-    if padding != (0, 0):
-        paddings = []
-        for p in t_padding:
-            paddings = [p, p] + paddings
-        input = pad(input, tuple(paddings))
-
-    batch_size, in_channels, input_size_h, input_size_w = input.shape
-    out_channels, _, kernel_size_h, kernel_size_w = weight.shape
-
-    index_pattern_h = conv_index_pattern(
-        input_size_h,
-        kernel_size_h,
-        stride=t_stride[0],
-        dilation=t_dilation[0],
-        device=input.device,
-    )
-    index_pattern_w = conv_index_pattern(
-        input_size_w,
-        kernel_size_w,
-        stride=t_stride[1],
-        dilation=t_dilation[1],
-        device=input.device,
-    )
-
-    output = einsum(
-        "ngiab,kza,lyb,goikl->ngozy",
-        input.reshape(
-            batch_size, groups, in_channels // groups, input_size_h, input_size_w
-        ),
-        index_pattern_h.to(input.dtype),
-        index_pattern_w.to(input.dtype),
-        weight.reshape(
-            groups,
-            out_channels // groups,
-            in_channels // groups,
-            kernel_size_h,
-            kernel_size_w,
-        ),
-    )
-    output = output.flatten(start_dim=1, end_dim=2)
-
-    if bias is not None:
-        output += bias.unsqueeze(0).unsqueeze(-1).unsqueeze(-1).expand_as(output)
-
-    return output
-
-
-def einconv3d(
-    input: Tensor,
-    weight: Tensor,
-    bias: Union[Tensor, None] = None,
-    stride: Union[int, Tuple[int, int, int]] = 1,
-    padding: Union[int, str, Tuple[int, int, int]] = 0,
-    dilation: Union[int, Tuple[int, int, int]] = 1,
-    groups: int = 1,
-):
-    """Equivalent of ``torch.nn.functional.conv3d``, but uses tensor contractions.
-
-    Args:
-        See documentation of ``torch.nn.functional.conv3d``. # noqa: DAR101
-
-    Returns:
-        Result of the convolution.
-
-    Raises:
-        NotImplementedError: If the supplied hyperparameters are not supported.
-    """
-    if isinstance(padding, str):
-        raise NotImplementedError("String-valued padding not yet supported.")
-
-    # convert into tuple format
-    t_stride: Tuple[int, int, int] = _triple(stride)
-    t_padding: Tuple[int, int, int] = _triple(padding)
-    t_dilation: Tuple[int, int, int] = _triple(dilation)
-
-    if padding != (0, 0, 0):
-        paddings = []
-        for p in t_padding:
-            paddings = [p, p] + paddings
-        input = pad(input, tuple(paddings))
-
-    batch_size, in_channels, input_size_d, input_size_h, input_size_w = input.shape
-    out_channels, _, kernel_size_d, kernel_size_h, kernel_size_w = weight.shape
-
-    index_pattern_d = conv_index_pattern(
-        input_size_d,
-        kernel_size_d,
-        stride=t_stride[0],
-        dilation=t_dilation[0],
-        device=input.device,
-    )
-    index_pattern_h = conv_index_pattern(
-        input_size_h,
-        kernel_size_h,
-        stride=t_stride[1],
-        dilation=t_dilation[1],
-        device=input.device,
-    )
-    index_pattern_w = conv_index_pattern(
-        input_size_w,
-        kernel_size_w,
-        stride=t_stride[2],
-        dilation=t_dilation[2],
-        device=input.device,
-    )
-
-    output = einsum(
-        "ngiabc,kza,lyb,mxc,goiklm->ngozyx",
-        input.reshape(
-            batch_size,
-            groups,
-            in_channels // groups,
-            input_size_d,
-            input_size_h,
-            input_size_w,
-        ),
-        index_pattern_d.to(input.dtype),
-        index_pattern_h.to(input.dtype),
-        index_pattern_w.to(input.dtype),
-        weight.reshape(
-            groups,
-            out_channels // groups,
-            in_channels // groups,
-            kernel_size_d,
-            kernel_size_h,
-            kernel_size_w,
-        ),
-    )
-    output = output.flatten(start_dim=1, end_dim=2)
-
-    if bias is not None:
-        output += (
-            bias.unsqueeze(0)
-            .unsqueeze(-1)
-            .unsqueeze(-1)
-            .unsqueeze(-1)
-            .expand_as(output)
+    if weight.dim() != N + 2:
+        raise ValueError(
+            f"For Conv(N={N})d, the kernel must be {N+2}d. Got {weight.dim()}d."
         )
 
+    (out_channels, _), kernel_sizes = weight.shape[:2], weight.shape[2:]
+
+    if bias is not None and (bias.dim() != 1 or bias.numel() != out_channels):
+        raise ValueError(f"Bias should have shape [{out_channels}]. Got {bias.shape}.")
+
+    # convert into tuple format
+    t_stride: Tuple[int, ...] = _tuple(stride, N)
+    t_padding: Tuple[int, ...] = _tuple(padding, N)
+    t_dilation: Tuple[int, ...] = _tuple(dilation, N)
+
+    if any(p != 0 for p in t_padding):
+        paddings = sum(([p, p] for p in reversed(t_padding)), [])
+        input = pad(input, tuple(paddings))
+
+    (batch_size, in_channels), input_sizes = input.shape[:2], input.shape[2:]
+
+    if weight.shape[0] % groups != 0:
+        raise ValueError(
+            f"Groups ({groups}) must divide out_channels ({weight.shape[0]})."
+        )
+
+    if weight.shape[1] * groups != in_channels:
+        raise ValueError(
+            f"Kernel dimension 1 ({weight.shape[1]}) multiplied by groups ({groups})"
+            + f" must equal in_channels ({in_channels})."
+        )
+
+    index_patterns: List[Tensor] = [
+        conv_index_pattern(
+            input_sizes[n],
+            kernel_sizes[n],
+            stride=t_stride[n],
+            dilation=t_dilation[n],
+            device=input.device,
+        ).to(input.dtype)
+        for n in range(N)
+    ]
+
+    equation = _conv_einsum_equation(N)
+
+    output = einsum(
+        equation,
+        input.reshape(batch_size, groups, in_channels // groups, *input_sizes),
+        *index_patterns,
+        weight.reshape(
+            groups, out_channels // groups, in_channels // groups, *kernel_sizes
+        ),
+    )
+    output = output.flatten(start_dim=1, end_dim=2)
+
+    if bias is not None:
+        shape_before_expand = (1, out_channels) + N * (1,)
+        output += bias.reshape(*shape_before_expand).expand_as(output)
+
     return output
+
+
+def _conv_einsum_equation(N: int) -> str:
+    """Generate einsum equation for convolution.
+
+    The arguments are ``input, *index_patterns, weight -> output``.
+
+    Args:
+        N: Convolution dimension.
+
+    Raises:
+        ValueError: If the equation cannot be realized without exceeding the alphabet.
+
+    Returns:
+        Einsum equation for N-dimensional convolution.
+    """
+    input_str = ""
+    output_str = ""
+    pattern_strs: List[str] = []
+    kernel_str = ""
+
+    # requires 4 + 3 * N letters
+    # einsum can deal with the 26 lowercase letters of the alphabet
+    max_letters, required_letters = 26, 4 + 3 * N
+    if required_letters > max_letters:
+        raise ValueError(
+            f"Cannot form einsum equation. Need {required_letters} letters."
+            + f" But einsum only supports {max_letters}."
+        )
+    letters = [chr(ord("a") + i) for i in range(required_letters)]
+
+    # batch dimension
+    batch_letter = letters.pop()
+    input_str += batch_letter
+    output_str += batch_letter
+
+    # group dimension
+    group_letter = letters.pop()
+    input_str += group_letter
+    output_str += group_letter
+    kernel_str += group_letter
+
+    # input and output channel dimensions
+    in_channel_letter = letters.pop()
+    out_channel_letter = letters.pop()
+    input_str += in_channel_letter
+    output_str += out_channel_letter
+    kernel_str += out_channel_letter + in_channel_letter
+
+    # coupling of input, output via kernel
+    for _ in range(N):
+        input_letter = letters.pop()
+        kernel_letter = letters.pop()
+        output_letter = letters.pop()
+
+        input_str += input_letter
+        output_str += output_letter
+        kernel_str += kernel_letter
+        pattern_strs.append(kernel_letter + output_letter + input_letter)
+
+    input_equation = ",".join([input_str] + pattern_strs + [kernel_str])
+
+    return "->".join([input_equation, output_str])

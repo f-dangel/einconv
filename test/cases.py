@@ -175,3 +175,34 @@ CONV_3D_FUNCTIONAL_CASES = [
     },
 ]
 CONV_3D_FUNCTIONAL_IDS = [make_id(case) for case in CONV_3D_FUNCTIONAL_CASES]
+
+CONV_4D_FUNCTIONAL_CASES = [
+    # no kwargs, non-trivial bias
+    {
+        "seed": 0,
+        # (batch_size, in_channels, num_pixels_h, num_pixels_w)
+        "input_fn": lambda: rand(2, 3, 25, 20, 15, 10),
+        # (out_channels, in_channels // groups, kernel_size_h, kernel_size_w)
+        "weight_fn": lambda: rand(4, 3, 5, 5, 5, 5),
+        "bias_fn": lambda: rand(4),
+        # stride, padding, dilation, groups
+        "conv_kwargs": {},
+    },
+    # non-trivial kwargs, non-trivial bias
+    {
+        "seed": 0,
+        # (batch_size, in_channels, num_pixels_h, num_pixels_w)
+        "input_fn": lambda: rand(2, 2, 40, 35, 30, 25),
+        # (out_channels, in_channels // groups, kernel_size_h, kernel_size_w)
+        "weight_fn": lambda: rand(4, 1, 5, 5, 4, 3),
+        "bias_fn": lambda: rand(4),
+        # stride, padding, dilation, groups
+        "conv_kwargs": {
+            "padding": (2, 1, 0, 1),
+            "stride": (3, 2, 1, 2),
+            "dilation": (3, 2, 3, 1),
+            "groups": 2,
+        },
+    },
+]
+CONV_4D_FUNCTIONAL_IDS = [make_id(case) for case in CONV_4D_FUNCTIONAL_CASES]
