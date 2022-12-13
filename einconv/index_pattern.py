@@ -56,7 +56,9 @@ def conv_index_pattern(
 
     # scatter True to [k, o, out_idxs[k, o]] ∀ k, o
     output_size = out_idxs.shape[1]
-    pattern = zeros(kernel_size, output_size, input_size, dtype=torch.bool)
+    pattern = zeros(
+        kernel_size, output_size, input_size, dtype=torch.bool, device=device
+    )
     pattern.scatter_add_(2, out_idxs.long(), ones_like(pattern))
 
     return pattern  # shape [kernel_size, output_size, input_size]

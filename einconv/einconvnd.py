@@ -49,12 +49,12 @@ def einconv1d(
         stride=t_stride[0],
         dilation=t_dilation[0],
         device=input.device,
-    ).to(input.dtype)
+    )
 
     output = einsum(
         "ngix,kyx,goik->ngoy",
         input.reshape(batch_size, groups, in_channels // groups, input_size),
-        index_pattern,
+        index_pattern.to(input.dtype),
         weight.reshape(
             groups, out_channels // groups, in_channels // groups, kernel_size
         ),
