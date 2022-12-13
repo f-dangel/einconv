@@ -95,7 +95,7 @@ def einconv2d(
     t_padding: Tuple[int, int] = _pair(padding)
     t_dilation: Tuple[int, int] = _pair(dilation)
 
-    if padding != (0,):
+    if padding != (0, 0):
         paddings = []
         for p in t_padding:
             paddings = [p, p] + paddings
