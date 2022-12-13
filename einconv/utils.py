@@ -12,6 +12,7 @@ def _tuple(conv_hyperparameter: Union[int, Tuple[int, ...]], N: int) -> Tuple[in
     Args:
         conv_hyperparameter: kernel size, padding, dilation, or stride, accepted as
             input by PyTorch's convolution functionals or modules.
+        N: Convolution dimension.
 
     Returns:
         A tuple with ``N`` entries containing the hyperparameter to be used for each
