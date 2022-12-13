@@ -4,13 +4,15 @@ import torch
 from torch import Tensor, arange, device, eye, ones_like, zeros
 from torch.nn.functional import conv1d
 
+cpu = device("cpu")
+
 
 def conv_index_pattern(
     input_size: int,
     kernel_size: int,
     stride: int = 1,
     dilation: int = 1,
-    device=device("cpu"),
+    device: device = cpu,
 ) -> Tensor:
     """Compute the 'dummy tensor' containing the index pattern a convolution dimension.
 
