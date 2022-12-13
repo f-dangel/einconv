@@ -14,7 +14,7 @@ def conv_index_pattern(
     dilation: int = 1,
     device: device = cpu,
 ) -> Tensor:
-    """Compute the 'dummy tensor' containing the index pattern a convolution dimension.
+    """Compute the 'dummy tensor' containing the index pattern of a conv. dimension.
 
     The dummy tensor is denoted 𝒫 in the paper (see page 3):
 
