@@ -26,12 +26,7 @@ CONV_1D_CASES = [
         "input_fn": lambda: rand(2, 3, 50),
         "weight_fn": lambda: rand(4, 3, 5),
         "bias_fn": lambda: rand(4),
-        "conv_kwargs": {
-            "stride": 2,
-            "padding": 0,
-            "dilation": 1,
-            "groups": 1,
-        },
+        "conv_kwargs": {"stride": 2},
     },
     # non-default stride, bias, groups
     {
@@ -39,12 +34,15 @@ CONV_1D_CASES = [
         "input_fn": lambda: rand(2, 4, 50),
         "weight_fn": lambda: rand(6, 2, 5),
         "bias_fn": lambda: rand(6),
-        "conv_kwargs": {
-            "stride": 3,
-            "padding": 0,
-            "dilation": 1,
-            "groups": 2,
-        },
+        "conv_kwargs": {"stride": 3, "groups": 2},
+    },
+    # non-default bias, padding
+    {
+        "seed": 0,
+        "input_fn": lambda: rand(2, 3, 50),
+        "weight_fn": lambda: rand(4, 3, 5),
+        "bias_fn": lambda: rand(4),
+        "conv_kwargs": {"padding": 2},
     },
 ]
 

@@ -3,6 +3,7 @@
 from typing import Union
 
 from torch import Tensor, einsum
+from torch.nn.functional import pad
 
 from einconv.index_pattern import conv_index_pattern
 
@@ -28,9 +29,10 @@ def einconv1d(
         NotImplementedError: If the supplied hyperparameters are not supported.
     """
     if isinstance(padding, str):
-        raise NotImplementedError
+        raise NotImplementedError("String-valued padding not yet supported.")
+
     if padding != 0:
-        raise NotImplementedError
+        input = pad(input, (padding, padding))
 
     batch_size, in_channels, input_size = input.shape
     out_channels, _, kernel_size = weight.shape
