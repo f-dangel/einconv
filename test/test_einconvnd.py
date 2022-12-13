@@ -45,7 +45,7 @@ def test_einconv1d(case: Dict, device: device):
 @mark.parametrize("device", DEVICES, ids=DEVICE_IDS)
 @mark.parametrize("case", CONV_2D_FUNCTIONAL_CASES, ids=CONV_2D_FUNCTIONAL_IDS)
 def test_einconv2d(case: Dict, device: device):
-    """Compare PyTorch's conv3d with einconv's einconv3d.
+    """Compare PyTorch's conv2d with einconv's einconv2d.
 
     Args:
         case: Dictionary describing the test case.
