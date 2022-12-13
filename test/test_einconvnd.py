@@ -33,6 +33,19 @@ CONV_1D_CASES = [
             "groups": 1,
         },
     },
+    # non-default stride, bias, groups
+    {
+        "seed": 0,
+        "input_fn": lambda: rand(2, 4, 50),
+        "weight_fn": lambda: rand(6, 2, 5),
+        "bias_fn": lambda: rand(6),
+        "conv_kwargs": {
+            "stride": 3,
+            "padding": 0,
+            "dilation": 1,
+            "groups": 2,
+        },
+    },
 ]
 
 

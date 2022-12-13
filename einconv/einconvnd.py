@@ -25,29 +25,29 @@ def einconv1d(
         Result of the convolution.
 
     Raises:
-        ValueError: If the input is not a 3d tensor, or the weight is not a 3d tensor.
         NotImplementedError: If the supplied hyperparameters are not supported.
     """
-    if groups != 1:
-        raise NotImplementedError
     if isinstance(padding, str):
         raise NotImplementedError
     if padding != 0:
         raise NotImplementedError
 
-    if input.dim() != 3:
-        raise ValueError
-    if weight.dim() != 3:
-        raise ValueError
-
-    input_size = input.shape[2]
-    kernel_size = weight.shape[2]
+    batch_size, in_channels, input_size = input.shape
+    out_channels, _, kernel_size = weight.shape
 
     index_pattern = conv_index_pattern(
         input_size, kernel_size, stride=stride, dilation=dilation, device=input.device
     ).to(input.dtype)
 
-    output = einsum("nix,kyx,oik->noy", input, index_pattern, weight)
+    output = einsum(
+        "ngix,kyx,goik->ngoy",
+        input.reshape(batch_size, groups, in_channels // groups, input_size),
+        index_pattern,
+        weight.reshape(
+            groups, out_channels // groups, in_channels // groups, kernel_size
+        ),
+    )
+    output = output.flatten(start_dim=1, end_dim=2)
 
     if bias is not None:
         output += bias.unsqueeze(0).unsqueeze(-1).expand_as(output)
