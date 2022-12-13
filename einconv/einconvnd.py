@@ -79,7 +79,7 @@ def einconv2d(
     """Equivalent of ``torch.nn.functionals.conv2d``, but uses tensor contractions.
 
     Args:
-        See documentation of ``torch.nn.functional.conv1d``. # noqa: DAR101
+        See documentation of ``torch.nn.functional.conv2d``. # noqa: DAR101
 
     Returns:
         Result of the convolution.
