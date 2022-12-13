@@ -1,6 +1,9 @@
 """Utility functions for testing."""
 
-from torch import Tensor, allclose, isclose
+from types import LambdaType
+from typing import Dict, List
+
+from torch import Tensor, allclose, cuda, device, isclose
 
 
 def report_nonclose(
@@ -33,3 +36,48 @@ def report_nonclose(
             if not isclose(a1, a2, atol=atol, rtol=rtol, equal_nan=equal_nan):
                 print(f"{a1} ≠ {a2}")
         raise ValueError("Compared tensors don't match.")
+
+
+def get_available_devices() -> List[device]:
+    """Return CPU and, if present, GPU device.
+
+    Returns:
+        List of available PyTorch devices.
+    """
+    devices = [device("cpu")]
+
+    if cuda.is_available():
+        devices.append(device("cuda"))
+
+    return devices
+
+
+def make_id(case: Dict) -> str:
+    """Create human-readable ID for a test case.
+
+    Args:
+        case: A dictionary.
+
+    Returns:
+        Human-readable string describing the dictionary's items.
+    """
+    parts = []
+
+    for key, value in case.items():
+        key_str = str(key)
+
+        if isinstance(value, Dict):
+            parts.append("_".join([key_str, make_id(value)]))
+        else:
+            if isinstance(value, LambdaType):
+                output = value()
+                if isinstance(output, Tensor):
+                    value_str = "x".join(str(s) for s in value().shape)
+                else:
+                    value_str = str(output)
+            else:
+                value_str = str(value)
+
+            parts.append("_".join([key_str, value_str]))
+
+    return "_".join(parts)

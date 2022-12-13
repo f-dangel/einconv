@@ -1,75 +1,36 @@
 """Tests for ``einconv/einconvnd``."""
 
+from test.cases import (
+    CONV_1D_FUNCTIONAL_CASES,
+    CONV_1D_FUNCTIONAL_IDS,
+    DEVICE_IDS,
+    DEVICES,
+)
 from test.utils import report_nonclose
+from typing import Dict
 
 from pytest import mark
-from torch import manual_seed, rand
+from torch import device, manual_seed
 from torch.nn.functional import conv1d
 
 from einconv.einconvnd import einconv1d
 
-CONV_1D_CASES = [
-    # no kwargs
-    {
-        "seed": 0,
-        # (batch_size, in_channels, num_pixels)
-        "input_fn": lambda: rand(2, 3, 50),
-        # (out_channels, in_channels // groups, kernel_size)
-        "weight_fn": lambda: rand(4, 3, 5),
-        "bias_fn": lambda: None,
-        # stride, padding, dilation, groups
-        "conv_kwargs": {},
-    },
-    # non-default stride, bias
-    {
-        "seed": 0,
-        "input_fn": lambda: rand(2, 3, 50),
-        "weight_fn": lambda: rand(4, 3, 5),
-        "bias_fn": lambda: rand(4),
-        "conv_kwargs": {"stride": 2},
-    },
-    # non-default stride, bias, groups
-    {
-        "seed": 0,
-        "input_fn": lambda: rand(2, 4, 50),
-        "weight_fn": lambda: rand(6, 2, 5),
-        "bias_fn": lambda: rand(6),
-        "conv_kwargs": {"stride": 3, "groups": 2},
-    },
-    # non-default bias, padding
-    {
-        "seed": 0,
-        "input_fn": lambda: rand(2, 3, 50),
-        "weight_fn": lambda: rand(4, 3, 5),
-        "bias_fn": lambda: rand(4),
-        "conv_kwargs": {"padding": 2},
-    },
-    # padding, stride, dilation specified as tuple
-    {
-        "seed": 0,
-        "input_fn": lambda: rand(2, 3, 50),
-        "weight_fn": lambda: rand(4, 3, 5),
-        "bias_fn": lambda: rand(4),
-        "conv_kwargs": {"padding": (2,), "stride": (3,), "dilation": (1,)},
-    },
-    # non-default dilation
-    {
-        "seed": 0,
-        "input_fn": lambda: rand(2, 3, 50),
-        "weight_fn": lambda: rand(4, 3, 5),
-        "bias_fn": lambda: None,
-        "conv_kwargs": {"dilation": 2},
-    },
-]
 
+@mark.parametrize("device", DEVICES, ids=DEVICE_IDS)
+@mark.parametrize("case", CONV_1D_FUNCTIONAL_CASES, ids=CONV_1D_FUNCTIONAL_IDS)
+def test_einconv1d(case: Dict, device: device):
+    """Compare PyTorch's conv1d with einconv's einconv1d.
 
-@mark.parametrize("case", CONV_1D_CASES)
-def test_einconv1d(case):
-    """Compare PyTorch's conv1d with einconv's einconv1d."""
+    Args:
+        case: Dictionary describing the test case.
+        device: Device for executing the test.
+    """
     manual_seed(case["seed"])
-    x = case["input_fn"]()
-    weight = case["weight_fn"]()
+    x = case["input_fn"]().to(device)
+    weight = case["weight_fn"]().to(device)
     bias = case["bias_fn"]()
+    if bias is not None:
+        bias = bias.to(device)
 
     conv1d_output = conv1d(x, weight, bias=bias, **case["conv_kwargs"])
     einconv1d_output = einconv1d(x, weight, bias=bias, **case["conv_kwargs"])
