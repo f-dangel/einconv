@@ -13,7 +13,7 @@ from einconv.utils import _tuple
 
 
 class EinconvNd(Module):
-    """Layer for N-dimensional convolution using tensor contractions."""
+    """Module for N-dimensional convolution using tensor contractions."""
 
     def __init__(
         self,
@@ -30,6 +30,39 @@ class EinconvNd(Module):
         device: Union[None, torch.device] = None,
         dtype: Union[None, torch.dtype] = None,
     ) -> None:
+        """Initialize convolution layer.
+
+        The weight has shape ``[out_channels, in_channels // groups, *kernel_size]``
+        with ``len(kernel_size)==N``. The bias has shape ``[out_channels]``.
+
+        Parameters are initialized using the same convention as PyTorch's convolutions.
+
+        Args:
+            N: Convolution dimension. For ``N=1,2,3`` the layer behaves like PyTorch's
+                ``nn.Conv{N=1,2,3}d`` layers. However, this layer generalizes
+                convolution and therefore also supports ``N>3``.
+            in_channels: Number of input channels.
+            out_channels: Number of output channels.
+            kernel_size: Kernel dimensions. Can be a single integer (shared along all
+                spatial dimensions), or an ``N``-tuple of integers.
+            stride: Stride of the convolution. Can be a single integer (shared along all
+                spatial dimensions), or an ``N``-tuple of integers. Default: ``1``.
+            padding: Padding of the convolution. Can be a single integer (shared along
+                all spatial dimensions), or an ``N``-tuple of integers. Default: ``0``.
+            dilation: Dilation of the convolution. Can be a single integer (shared along
+                all spatial dimensions), or an ``N``-tuple of integers. Default: ``1``.
+            groups: How to split the input into groups. Default: ``1``.
+            bias: Whether to use a non-zero bias vector. Default: ``True``.
+            padding_mode: How to perform padding. Default: ``'zeros'``. No other modes
+                are supported at the moment.
+            device: Device on which the module is initialized.
+            dtype: Data type assumed by the module.
+
+        Raises:
+            NotImplementedError: For unsupported padding modes.
+            ValueError: For invalid combinations of ``in_channels``, ``out_channels``,
+                and ``groups``.
+        """
         super().__init__()
 
         if padding_mode != "zeros":
@@ -83,6 +116,18 @@ class EinconvNd(Module):
                 init.uniform_(self.bias, -bound, bound)
 
     def forward(self, input: Tensor) -> Tensor:
+        """Perform convolution on the input.
+
+        Args:
+            input: Convolution input. Has shape
+                ``[batch_size, in_channels, *spatial_in_dims]`` where
+                ``len(spatial_in_dims)==N``.
+
+        Returns:
+            Result of the convolution. Has shape
+                ``[batch_size, out_channels, *spatial_out_dims]`` where
+                ``len(spatial_out_dims)==N``.
+        """
         return einconvNd(
             input,
             self.weight,
