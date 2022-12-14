@@ -107,7 +107,7 @@ def compare_attributes(obj1: Any, obj2: Any, attributes: List[str]):
 
 
 def sync_parameters(module1: Module, module2: Module) -> None:
-    """Copy the values of ``module1``'s parameters to ``module2``'s parameters
+    """Copy the values of ``module1``'s parameters to ``module2``'s parameters.
 
     Args:
         module1: Module whose parameters will be used for syncing.

@@ -212,7 +212,7 @@ def conv_module_from_case(
         case["kernel_size"],
         **case["conv_kwargs"],
         device=device,
-        dtype=dtype
+        dtype=dtype,
     )
 
 
@@ -236,5 +236,5 @@ def einconv_module_from_case(
         case["kernel_size"],
         **case["conv_kwargs"],
         device=device,
-        dtype=dtype
+        dtype=dtype,
     )
