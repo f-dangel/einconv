@@ -1,11 +1,8 @@
-"""Contains test cases for ``einconv``."""
+"""Contains test cases for ``einconv``'s functional implementation of convolution."""
 
-from test.utils import get_available_devices, make_id
+from test.utils import make_id
 
 from torch import rand
-
-DEVICES = get_available_devices()
-DEVICE_IDS = [f"device_{dev}" for dev in DEVICES]
 
 CONV_1D_FUNCTIONAL_CASES = [
     # no kwargs
