@@ -38,6 +38,7 @@ def _test_EinconvNd(
 
     conv_module = conv_module_from_case(N, case, device, dtype=dtype)
     einconv_module = EinconvNd.from_nn_Conv(conv_module)
+    print(einconv_module)
 
     report_nonclose(conv_module(x), einconv_module(x), atol=1e-6, rtol=1e-5)
 
