@@ -1,15 +1,17 @@
 """PyTorch modules and functionals implementing N-dimensional convolution."""
 
+from __future__ import annotations
+
 from math import sqrt
 from typing import List, Tuple, Union
 
 import torch
 from torch import Tensor, einsum, empty
-from torch.nn import Module, Parameter, init
+from torch.nn import Conv1d, Conv2d, Conv3d, Module, Parameter, init
 from torch.nn.functional import pad
 
 from einconv.index_pattern import conv_index_pattern
-from einconv.utils import _tuple
+from einconv.utils import _tuple, sync_parameters
 
 
 class EinconvNd(Module):
@@ -101,6 +103,35 @@ class EinconvNd(Module):
             self.register_parameter("bias", None)
 
         self.reset_parameters()
+
+    @classmethod
+    def from_nn_Conv(cls, conv_module: Union[Conv1d, Conv2d, Conv3d]) -> EinconvNd:
+        """Convert a ``torch.nn.Conv{1,2,3}d`` module to a ``EinconvNd`` layer.
+
+        Args:
+            conv_module: Convolution module.
+
+        Returns:
+            EinconvNd module.
+        """
+        N = {Conv1d: 1, Conv2d: 2, Conv3d: 3}[conv_module.__class__]
+        einconv_module = cls(
+            N,
+            conv_module.in_channels,
+            conv_module.out_channels,
+            conv_module.kernel_size,
+            stride=conv_module.stride,
+            padding=conv_module.padding,
+            dilation=conv_module.dilation,
+            groups=conv_module.groups,
+            bias=conv_module.bias is not None,
+            padding_mode=conv_module.padding_mode,
+            device=conv_module.weight.device,
+            dtype=conv_module.weight.dtype,
+        )
+        sync_parameters(conv_module, einconv_module)
+
+        return einconv_module
 
     def reset_parameters(self):
         """Initialize the parameters.
