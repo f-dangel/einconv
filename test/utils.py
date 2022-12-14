@@ -1,10 +1,9 @@
 """Utility functions for testing."""
 
 from types import LambdaType
-from typing import Any, Dict, List
+from typing import Dict, List
 
 from torch import Tensor, allclose, cuda, device, isclose
-from torch.nn import Module
 
 
 def report_nonclose(
