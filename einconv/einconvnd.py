@@ -1,12 +1,97 @@
 """PyTorch modules and functionals implementing N-dimensional convolution."""
 
+from math import sqrt
 from typing import List, Tuple, Union
 
-from torch import Tensor, einsum
+import torch
+from torch import Tensor, einsum, empty
+from torch.nn import Module, Parameter, init
 from torch.nn.functional import pad
 
 from einconv.index_pattern import conv_index_pattern
 from einconv.utils import _tuple
+
+
+class EinconvNd(Module):
+    """Layer for N-dimensional convolution using tensor contractions."""
+
+    def __init__(
+        self,
+        N: int,
+        in_channels: int,
+        out_channels: int,
+        kernel_size: Union[int, Tuple[int, ...]],
+        stride: Union[int, Tuple[int, ...]] = 1,
+        padding: Union[int, Tuple[int, ...]] = 0,
+        dilation: Union[int, Tuple[int, ...]] = 1,
+        groups: int = 1,
+        bias: bool = True,
+        padding_mode: str = "zeros",
+        device: Union[None, torch.device] = None,
+        dtype: Union[None, torch.dtype] = None,
+    ) -> None:
+        super().__init__()
+
+        if padding_mode != "zeros":
+            raise NotImplementedError("Only padding_mode='zeros' supported.")
+
+        if groups <= 0:
+            raise ValueError("groups must be a positive integer")
+        if in_channels % groups != 0:
+            raise ValueError(
+                f"groups ({groups}) must divide in_channels ({in_channels})."
+            )
+        if out_channels % groups != 0:
+            raise ValueError(
+                f"groups ({groups}) must divide out_channels ({out_channels})."
+            )
+
+        self.N = N
+        self.in_channels = in_channels
+        self.out_channels = out_channels
+        self.kernel_size = _tuple(kernel_size, N)
+        self.stride = _tuple(stride, N)
+        self.padding = _tuple(padding, N)
+        self.dilation = _tuple(dilation, N)
+        self.groups = groups
+
+        device = torch.device("cpu") if device is None else device
+        dtype = torch.float32 if dtype is None else dtype
+
+        weight_shape = (out_channels, in_channels // groups, *self.kernel_size)
+        self.weight = Parameter(empty(weight_shape, device=device, dtype=dtype))
+
+        if bias:
+            bias_shape = (out_channels,)
+            self.bias = Parameter(empty(bias_shape, device=device, dtype=dtype))
+        else:
+            self.register_parameter("bias", None)
+
+        self.reset_parameters()
+
+    def reset_parameters(self):
+        """Initialize the parameters.
+
+        Follows the initialization scheme for convolutions in PyTorch, see
+        https://github.com/pytorch/pytorch/blob/orig/release/1.13/torch/nn/modules/conv.py#L146-L155
+        """
+        init.kaiming_uniform_(self.weight, a=sqrt(5))
+        if self.bias is not None:
+            fan_in, _ = init._calculate_fan_in_and_fan_out(self.weight)
+            if fan_in != 0:
+                bound = 1 / sqrt(fan_in)
+                init.uniform_(self.bias, -bound, bound)
+
+    def forward(self, input: Tensor) -> Tensor:
+        return einconvNd(
+            input,
+            self.weight,
+            bias=self.bias,
+            stride=self.stride,
+            padding=self.padding,
+            dilation=self.dilation,
+            groups=self.groups,
+        )
 
 
 def einconvNd(

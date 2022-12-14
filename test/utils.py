@@ -1,7 +1,7 @@
 """Utility functions for testing."""
 
 from types import LambdaType
-from typing import Dict, List
+from typing import Any, Dict, List
 
 from torch import Tensor, allclose, cuda, device, isclose
 
@@ -85,3 +85,21 @@ def make_id(case: Dict) -> str:
             parts.append("_".join([key_str, value_str]))
 
     return "_".join(parts)
+
+
+def compare_attributes(obj1: Any, obj2: Any, attributes: List[str]):
+    """Compare multiple attributes of two objects.
+
+    Args:
+        obj1: First object.
+        obj2: Second object.
+        attributes: Attribute names to compare.
+
+    Raises:
+        ValueError: If two attributes don't match.
+    """
+    for attr in attributes:
+        attr1 = getattr(obj1, attr)
+        attr2 = getattr(obj2, attr)
+        if attr1 != attr2:
+            raise ValueError(f"'{attr}' attribute does not match: {attr1} ≠ {attr2}")
