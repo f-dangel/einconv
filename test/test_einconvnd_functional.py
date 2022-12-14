@@ -1,6 +1,6 @@
-"""Tests for ``einconv/einconvnd``."""
+"""Tests for ``einconv/einconvnd``'s convolution functional operations."""
 
-from test.cases import (
+from test.conv_functional_cases import (
     CONV_1D_FUNCTIONAL_CASES,
     CONV_1D_FUNCTIONAL_IDS,
     CONV_2D_FUNCTIONAL_CASES,
@@ -9,10 +9,8 @@ from test.cases import (
     CONV_3D_FUNCTIONAL_IDS,
     CONV_4D_FUNCTIONAL_CASES,
     CONV_4D_FUNCTIONAL_IDS,
-    DEVICE_IDS,
-    DEVICES,
 )
-from test.utils import report_nonclose
+from test.utils import DEVICE_IDS, DEVICES, report_nonclose
 from typing import Dict
 
 from pytest import mark

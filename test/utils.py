@@ -52,6 +52,10 @@ def get_available_devices() -> List[device]:
     return devices
 
 
+DEVICES = get_available_devices()
+DEVICE_IDS = [f"device_{dev}" for dev in DEVICES]
+
+
 def make_id(case: Dict) -> str:
     """Create human-readable ID for a test case.
 
