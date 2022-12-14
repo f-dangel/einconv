@@ -113,7 +113,7 @@ CONV_3D_MODULE_CASES = [
     # no kwargs except for bias disabled
     {
         "seed": 0,
-        # (batch_size, in_channels, num_pixels_h, num_pixels_w)
+        # (batch_size, in_channels, num_pixels_d, num_pixels_h, num_pixels_w)
         "input_fn": lambda: rand(2, 3, 20, 15, 10),
         "in_channels": 3,
         "out_channels": 4,
@@ -157,6 +157,39 @@ CONV_3D_MODULE_CASES = [
     },
 ]
 CONV_3D_MODULE_IDS = [make_id(case) for case in CONV_3D_MODULE_CASES]
+
+CONV_4D_MODULE_CASES = [
+    # no kwargs except for bias disabled
+    {
+        "seed": 0,
+        # (batch_size, in_channels, *num_pixels)
+        "input_fn": lambda: rand(2, 3, 25, 20, 15, 10),
+        "in_channels": 3,
+        "out_channels": 4,
+        "kernel_size": 5,
+        # stride, padding, dilation, groups, padding_mode, bias
+        "conv_kwargs": {
+            "bias": False,
+        },
+    },
+    # non-default kwargs as tuples
+    {
+        "seed": 0,
+        "input_fn": lambda: rand(2, 2, 40, 35, 30, 25),
+        "in_channels": 2,
+        "out_channels": 4,
+        "kernel_size": (5, 5, 4, 3),
+        "conv_kwargs": {
+            "stride": (2, 3, 2, 1),
+            "padding": (2, 0, 2, 1),
+            "dilation": (2, 1, 3, 2),
+            "groups": 2,
+            "padding_mode": "zeros",
+            "bias": True,
+        },
+    },
+]
+CONV_4D_MODULE_IDS = [make_id(case) for case in CONV_4D_MODULE_CASES]
 
 
 def conv_module_from_case(
