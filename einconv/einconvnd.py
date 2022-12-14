@@ -87,6 +87,7 @@ class EinconvNd(Module):
         self.kernel_size = _tuple(kernel_size, N)
         self.stride = _tuple(stride, N)
         self.padding = _tuple(padding, N)
+        self.padding_mode = padding_mode
         self.dilation = _tuple(dilation, N)
         self.groups = groups
 
@@ -168,6 +169,28 @@ class EinconvNd(Module):
             dilation=self.dilation,
             groups=self.groups,
         )
+
+    def extra_repr(self) -> str:
+        """Generate representation of extra arguments.
+
+        Returns:
+            String describing the module's arguments.
+        """
+        s = (
+            "{in_channels}, {out_channels}, kernel_size={kernel_size}"
+            ", stride={stride}"
+        )
+        if self.padding != (0,) * len(self.padding):
+            s += ", padding={padding}"
+        if self.dilation != (1,) * len(self.dilation):
+            s += ", dilation={dilation}"
+        if self.groups != 1:
+            s += ", groups={groups}"
+        if self.bias is None:
+            s += ", bias=False"
+        if self.padding_mode != "zeros":
+            s += ", padding_mode={padding_mode}"
+        return s.format(**self.__dict__)
 
 
 def einconvNd(
