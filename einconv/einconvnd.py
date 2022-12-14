@@ -177,7 +177,7 @@ class EinconvNd(Module):
             String describing the module's arguments.
         """
         s = (
-            "{in_channels}, {out_channels}, kernel_size={kernel_size}"
+            "{N}, {in_channels}, {out_channels}, kernel_size={kernel_size}"
             ", stride={stride}"
         )
         if self.padding != (0,) * len(self.padding):
