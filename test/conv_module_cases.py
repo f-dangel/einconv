@@ -159,6 +159,17 @@ CONV_3D_MODULE_CASES = [
 CONV_3D_MODULE_IDS = [make_id(case) for case in CONV_3D_MODULE_CASES]
 
 CONV_4D_MODULE_CASES = [
+    # no kwargs (bias enabled)
+    {
+        "seed": 0,
+        # (batch_size, in_channels, *num_pixels)
+        "input_fn": lambda: rand(2, 3, 25, 20, 15, 10),
+        "in_channels": 3,
+        "out_channels": 4,
+        "kernel_size": 5,
+        # stride, padding, dilation, groups, padding_mode, bias
+        "conv_kwargs": {},
+    },
     # no kwargs except for bias disabled
     {
         "seed": 0,

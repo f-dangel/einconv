@@ -2,6 +2,10 @@
 
 from os.path import abspath, dirname, join
 from sys import path
+from typing import Callable, Union
+
+from torch import Tensor
+from torch.nn import Parameter
 
 from einconv.einconvnd import EinconvNd
 
@@ -28,6 +32,12 @@ def to_ConvNd_third_party(einconv_module: EinconvNd) -> Conv_Nd_third_party:
     Raises:
         NotImplementedError: For unsupported convolution dimensions.
     """
+    bias_initializer: Union[None, Callable[[Parameter], None]] = None
+    if einconv_module.bias is not None:
+
+        def bias_initializer(bias: Parameter) -> None:
+            bias.data = einconv_module.bias.data.clone()
+
     module = Conv_Nd_third_party(
         einconv_module.in_channels,
         einconv_module.out_channels,
@@ -39,13 +49,12 @@ def to_ConvNd_third_party(einconv_module: EinconvNd) -> Conv_Nd_third_party:
         dilation=einconv_module.dilation,
         groups=einconv_module.groups,
         use_bias=einconv_module.bias is not None,
+        bias_initializer=bias_initializer,
     )
 
     if einconv_module.N <= 3:
         raise NotImplementedError
     if einconv_module.N != 4:
-        raise NotImplementedError
-    if einconv_module.bias is not None:
         raise NotImplementedError
 
     for idx, layer in enumerate(module.conv_layers):

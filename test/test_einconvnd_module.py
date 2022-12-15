@@ -122,11 +122,7 @@ def test_Einconv4d(case: Dict, device: device, dtype: Union[torch.dtype, None] =
     einconv_module = einconv_module_from_case(N, case, device, dtype=dtype)
     einconv_output = einconv_module(x)
 
-    if (
-        N != 4
-        or einconv_module.bias is not None
-        or any(d != 1 for d in einconv_module.dilation)
-    ):
+    if N != 4 or any(d != 1 for d in einconv_module.dilation):
         skip()
 
     third_party_module = to_ConvNd_third_party(einconv_module)
