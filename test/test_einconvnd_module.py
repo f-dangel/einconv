@@ -11,6 +11,8 @@ from test.conv_module_cases import (
     CONV_4D_MODULE_IDS,
     CONV_5D_MODULE_CASES,
     CONV_5D_MODULE_IDS,
+    CONV_6D_MODULE_CASES,
+    CONV_6D_MODULE_IDS,
     conv_module_from_case,
     einconv_module_from_case,
 )
@@ -91,8 +93,8 @@ def test_Einconv3d(case: Dict, device: device, dtype: Union[torch.dtype, None] =
 @mark.parametrize("device", DEVICES, ids=DEVICE_IDS)
 @mark.parametrize(
     "case",
-    CONV_4D_MODULE_CASES + CONV_5D_MODULE_CASES,
-    ids=CONV_4D_MODULE_IDS + CONV_5D_MODULE_IDS,
+    CONV_4D_MODULE_CASES + CONV_5D_MODULE_CASES + CONV_6D_MODULE_CASES,
+    ids=CONV_4D_MODULE_IDS + CONV_5D_MODULE_IDS + CONV_6D_MODULE_IDS,
 )
 def test_Einconv_higher_d_integration(
     case: Dict, device: device, dtype: Union[torch.dtype, None] = None
@@ -114,8 +116,8 @@ def test_Einconv_higher_d_integration(
 @mark.parametrize("device", DEVICES, ids=DEVICE_IDS)
 @mark.parametrize(
     "case",
-    CONV_4D_MODULE_CASES + CONV_5D_MODULE_CASES,
-    ids=CONV_4D_MODULE_IDS + CONV_5D_MODULE_IDS,
+    CONV_4D_MODULE_CASES + CONV_5D_MODULE_CASES + CONV_6D_MODULE_CASES,
+    ids=CONV_4D_MODULE_IDS + CONV_5D_MODULE_IDS + CONV_6D_MODULE_IDS,
 )
 def test_Einconv_higher_d(
     case: Dict, device: device, dtype: Union[torch.dtype, None] = None

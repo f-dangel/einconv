@@ -225,6 +225,17 @@ CONV_5D_MODULE_CASES = [
         "kernel_size": (5, 4, 2, 3, 4),
         "conv_kwargs": {
             "stride": (4, 3, 1, 2, 4),
+            # TODO the following does not work:
+            # (1, 0, 0, 0, 0)
+            # But the following works:
+            # (3, 0, 0, 0, 0)
+            # (2, 0, 1, 1, 3)
+            # (0, 1, 0, 0, 0)
+            # (0, 0, 1, 0, 0)
+            # (0, 0, 0, 1, 0)
+            # (0, 0, 0, 0, 1)
+            # Something seems to be wrong with the first padding axes, but
+            # I don't know why. Could the bug be in the 3rd-party implementation?
             "padding": (2, 0, 1, 1, 3),
             # "dilation": (2, 1, 3, 2, 1), # not supported by 3rd party implementation
             "groups": 2,
@@ -234,6 +245,51 @@ CONV_5D_MODULE_CASES = [
     },
 ]
 CONV_5D_MODULE_IDS = [make_id(case) for case in CONV_5D_MODULE_CASES]
+
+CONV_6D_MODULE_CASES = [
+    # no kwargs (bias enabled)
+    {
+        "seed": 0,
+        # (batch_size, in_channels, *num_pixels)
+        "input_fn": lambda: rand(2, 3, 15, 10, 8, 6, 5, 5),
+        "in_channels": 3,
+        "out_channels": 4,
+        "kernel_size": 3,
+        # stride, padding, dilation, groups, padding_mode, bias
+        "conv_kwargs": {
+            "bias": False,
+        },
+    },
+    # non-default kwargs as tuples
+    {
+        "seed": 0,
+        "input_fn": lambda: rand(2, 2, 10, 10, 10, 10, 5, 5),
+        "in_channels": 2,
+        "out_channels": 4,
+        "kernel_size": (3, 2, 3, 4, 2, 2),
+        "conv_kwargs": {
+            "stride": (3, 2, 2, 3, 3, 2),
+            # TODO the following does not work:
+            # (0, 1, 0, 0, 0, 0),
+            # (0, 0, 1, 0, 0, 0),
+            # 1,
+            # But the following works:
+            # (1, 0, 0, 0, 0, 0),
+            # (0, 0, 0, 1, 0, 0),
+            # (0, 0, 0, 0, 1, 0),
+            # (0, 0, 0, 0, 0, 1),
+            # (2, 0, 0, 2, 1, 1),
+            # Something seems to be wrong with the second and third padding axes, but
+            # I don't know why. Could the bug be in the 3rd-party implementation?
+            "padding": (2, 0, 0, 2, 1, 1),
+            # "dilation": (2, 1, 3, 2, 1, 1), # not supported by 3rd party implem.
+            "groups": 2,
+            "padding_mode": "zeros",
+            "bias": True,
+        },
+    },
+]
+CONV_6D_MODULE_IDS = [make_id(case) for case in CONV_6D_MODULE_CASES]
 
 
 def conv_module_from_case(
