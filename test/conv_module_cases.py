@@ -202,6 +202,39 @@ CONV_4D_MODULE_CASES = [
 ]
 CONV_4D_MODULE_IDS = [make_id(case) for case in CONV_4D_MODULE_CASES]
 
+CONV_5D_MODULE_CASES = [
+    # no kwargs (bias enabled)
+    {
+        "seed": 0,
+        # (batch_size, in_channels, *num_pixels)
+        "input_fn": lambda: rand(2, 3, 15, 10, 8, 6, 5),
+        "in_channels": 3,
+        "out_channels": 4,
+        "kernel_size": 3,
+        # stride, padding, dilation, groups, padding_mode, bias
+        "conv_kwargs": {
+            "bias": False,
+        },
+    },
+    # non-default kwargs as tuples
+    {
+        "seed": 0,
+        "input_fn": lambda: rand(2, 2, 20, 15, 10, 15, 20),
+        "in_channels": 2,
+        "out_channels": 4,
+        "kernel_size": (5, 4, 2, 3, 4),
+        "conv_kwargs": {
+            "stride": (4, 3, 1, 2, 4),
+            "padding": (2, 0, 1, 1, 3),
+            # "dilation": (2, 1, 3, 2, 1), # not supported by 3rd party implementation
+            "groups": 2,
+            "padding_mode": "zeros",
+            "bias": False,
+        },
+    },
+]
+CONV_5D_MODULE_IDS = [make_id(case) for case in CONV_5D_MODULE_CASES]
+
 
 def conv_module_from_case(
     N: int, case: Dict, device: torch.device, dtype: Union[torch.dtype, None] = None

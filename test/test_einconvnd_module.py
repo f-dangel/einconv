@@ -9,6 +9,8 @@ from test.conv_module_cases import (
     CONV_3D_MODULE_IDS,
     CONV_4D_MODULE_CASES,
     CONV_4D_MODULE_IDS,
+    CONV_5D_MODULE_CASES,
+    CONV_5D_MODULE_IDS,
     conv_module_from_case,
     einconv_module_from_case,
 )
@@ -87,27 +89,37 @@ def test_Einconv3d(case: Dict, device: device, dtype: Union[torch.dtype, None] =
 
 
 @mark.parametrize("device", DEVICES, ids=DEVICE_IDS)
-@mark.parametrize("case", CONV_4D_MODULE_CASES, ids=CONV_4D_MODULE_IDS)
-def test_Einconv4d_integration(
+@mark.parametrize(
+    "case",
+    CONV_4D_MODULE_CASES + CONV_5D_MODULE_CASES,
+    ids=CONV_4D_MODULE_IDS + CONV_5D_MODULE_IDS,
+)
+def test_Einconv_higher_d_integration(
     case: Dict, device: device, dtype: Union[torch.dtype, None] = None
 ):
-    """Run a forward pass of einconv's Einconv4d layer without verifying correctness.
+    """Run a forward pass of einconv's Einconv>3d layer without verifying correctness.
 
     Args:
         case: Dictionary describing the test case.
         device: Device for executing the test.
         dtype: Data type assumed by the layer. Default: ``None`` (``torch.float32``).
     """
-    N = 4
     manual_seed(case["seed"])
     x = case["input_fn"]().to(device)
+    N = x.dim() - 2
 
     einconv_module_from_case(N, case, device, dtype=dtype)(x)
 
 
 @mark.parametrize("device", DEVICES, ids=DEVICE_IDS)
-@mark.parametrize("case", CONV_4D_MODULE_CASES, ids=CONV_4D_MODULE_IDS)
-def test_Einconv4d(case: Dict, device: device, dtype: Union[torch.dtype, None] = None):
+@mark.parametrize(
+    "case",
+    CONV_4D_MODULE_CASES + CONV_5D_MODULE_CASES,
+    ids=CONV_4D_MODULE_IDS + CONV_5D_MODULE_IDS,
+)
+def test_Einconv_higher_d(
+    case: Dict, device: device, dtype: Union[torch.dtype, None] = None
+):
     """Compare forward pass of einconv's Einconv4d layer with 3rd-party implementation.
 
     Args:
@@ -115,14 +127,14 @@ def test_Einconv4d(case: Dict, device: device, dtype: Union[torch.dtype, None] =
         device: Device for executing the test.
         dtype: Data type assumed by the layer. Default: ``None`` (``torch.float32``).
     """
-    N = 4
     manual_seed(case["seed"])
     x = case["input_fn"]().to(device)
+    N = x.dim() - 2
 
     einconv_module = einconv_module_from_case(N, case, device, dtype=dtype)
     einconv_output = einconv_module(x)
 
-    if N != 4 or any(d != 1 for d in einconv_module.dilation):
+    if any(d != 1 for d in einconv_module.dilation):
         skip()
 
     third_party_module = to_ConvNd_third_party(einconv_module)
