@@ -10,7 +10,7 @@ HERE = abspath(__file__)
 REPO_ROOT_DIR = dirname(dirname(HERE))
 THIRD_PARTY_DIR = join(REPO_ROOT_DIR, "third_party", "pytorch_convNd")
 path.append(THIRD_PARTY_DIR)
-from convNd import convNd as Conv_Nd_third_party
+from convNd import convNd as Conv_Nd_third_party  # noqa: E402
 
 path.remove(THIRD_PARTY_DIR)
 
