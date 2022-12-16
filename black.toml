@@ -12,7 +12,6 @@ exclude = '''
     | docs
     | build
     | dist
-    | third_party
   )/
 )
 '''

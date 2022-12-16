@@ -6,7 +6,7 @@ Use setup.cfg to configure the project.
 import sys
 
 from pkg_resources import VersionConflict, require
-from setuptools import find_packages, setup
+from setuptools import setup
 
 try:
     require("setuptools>=38.3")
@@ -16,4 +16,4 @@ except VersionConflict:
 
 
 if __name__ == "__main__":
-    setup(use_scm_version=True, packages=find_packages(exclude=["third_party"]))
+    setup(use_scm_version=True)

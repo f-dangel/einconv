@@ -1,3 +1,0 @@
-[submodule "third_party/pytorch_convNd"]
-	path = third_party/pytorch_convNd
-	url = git@github.com:pvjosue/pytorch_convNd.git
