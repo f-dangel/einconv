@@ -2,7 +2,7 @@
 
 from os.path import abspath, dirname, join
 from sys import path
-from typing import Callable, List, Union
+from typing import List, Union
 
 from torch import Tensor
 from torch.nn import Conv3d, Module, Parameter, Sequential
