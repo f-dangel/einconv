@@ -194,7 +194,6 @@ CONV_3D_MODULE_CASES = [
             "padding": "same",
             "dilation": (2, 1, 3),
             "groups": 3,
-            "padding_mode": "zeros",
             "bias": True,
         },
     },
