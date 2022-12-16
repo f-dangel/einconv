@@ -303,6 +303,10 @@ def _conv_einsum_equation(N: int) -> str:
 
     The arguments are ``input, *index_patterns, weight -> output``.
 
+    See https://arxiv.org/pdf/1908.04471.pdf, figure 2a for a visualization of the 3d
+    case (neglecting the groups). The Nd case follows identically, and groups can be
+    supported by a separate axis in the input, weight, and output.
+
     Args:
         N: Convolution dimension.
 
