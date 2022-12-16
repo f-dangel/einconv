@@ -8,7 +8,6 @@ from typing import List, Tuple, Union
 import torch
 from torch import Tensor, einsum, empty
 from torch.nn import Conv1d, Conv2d, Conv3d, Module, Parameter, init
-from torch.nn.functional import pad
 
 from einconv.index_pattern import conv_index_pattern
 from einconv.utils import _tuple, sync_parameters
@@ -235,6 +234,9 @@ def einconvNd(
         ValueError: If weight dimension is incorrect.
         ValueError: If weight shape is invalid.
     """
+    if isinstance(padding, str):
+        raise NotImplementedError("String-valued padding not yet supported.")
+
     N = input.dim() - 2
 
     (batch_size, in_channels), input_sizes = input.shape[:2], input.shape[2:]
