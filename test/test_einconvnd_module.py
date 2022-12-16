@@ -149,4 +149,4 @@ def test_Einconv_higher_d_jax(
     jax_module = to_ConvNd_jax(einconv_module)
     jax_output = jax_module(x)
 
-    report_nonclose(einconv_output, jax_output, atol=1e-6)
+    report_nonclose(einconv_output, jax_output, atol=2e-6)
