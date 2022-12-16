@@ -288,9 +288,10 @@ CONV_5D_MODULE_CASES = [
         },
     },
     # non-default kwargs as tuples, output of third-party PyTorch
-    # implementation disagrees. This test case is evidence that there might be
-    # a bug in the third-party implementation, because einconv and JAX agree,
-    # but einconv and third-party disagree.
+    # implementation (https://github.com/pvjosue/pytorch_convNd) disagrees.
+    # This test case is evidence that there might be a bug in the third-party
+    # implementation, because einconv and JAX agree, but einconv and
+    # third-party disagree.
     {
         "seed": 0,
         "input_fn": lambda: rand(2, 2, 20, 15, 10, 15, 20),
