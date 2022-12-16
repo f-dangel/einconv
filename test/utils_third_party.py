@@ -32,6 +32,9 @@ def to_ConvNd_third_party(einconv_module: EinconvNd) -> Sequential:
     Raises:
         NotImplementedError: For unsupported convolution dimensions.
     """
+    if einconv_module.N <= 3:
+        raise NotImplementedError("Parameter syncing not implemented for N<=3.")
+
     module = Conv_Nd_third_party(
         einconv_module.in_channels,
         einconv_module.out_channels,
@@ -45,35 +48,12 @@ def to_ConvNd_third_party(einconv_module: EinconvNd) -> Sequential:
         use_bias=False,
     )
 
-    if einconv_module.N <= 3:
-        raise NotImplementedError("Parameter syncing not implemented for N<=3.")
-
-    def get_conv_layers(
-        third_party: Union[Conv_Nd_third_party, Conv3d]
-    ) -> List[Conv3d]:
-        """Flatten the 3d convolutions called by this implementation into a list.
-
-        Args:
-            third_party: Layer of third-party convolution layer or torch 3d conv layer.
-
-        Returns:
-            Flattened 3d convolutions that are recursively called by this
-            implementation.
-        """
-        conv_layers = []
-        if isinstance(third_party, Conv_Nd_third_party):
-            for layer in third_party.conv_layers:
-                conv_layers += get_conv_layers(layer)
-        else:
-            conv_layers.append(third_party)
-
-        return conv_layers
-
+    # sync weights
     weight_flat = einconv_module.weight
     weight_flat = weight_flat.reshape(
         *weight_flat.shape[:2], -1, *weight_flat.shape[-3:]
     )
-    conv_layers = get_conv_layers(module)
+    conv_layers = _flattened_conv_layers(module)
 
     for idx, layer in enumerate(conv_layers):
         chunk = weight_flat[:, :, idx, :, :]
@@ -86,12 +66,36 @@ def to_ConvNd_third_party(einconv_module: EinconvNd) -> Sequential:
         layer.weight.data = chunk.data.clone()
 
     sequential = Sequential(module)
+
+    # add bias if necessary
     if einconv_module.bias is not None:
         bias_layer = ConvBias(einconv_module.out_channels).to(weight_flat.device)
         bias_layer.bias.data = einconv_module.bias.data.clone()
         sequential.extend([bias_layer])
 
     return sequential
+
+
+def _flattened_conv_layers(
+    third_party: Union[Conv_Nd_third_party, Conv3d]
+) -> List[Conv3d]:
+    """Flatten the 3d convolutions called by this implementation into a list.
+
+    Args:
+        third_party: Layer of third-party convolution layer or torch 3d conv layer.
+
+    Returns:
+        Flattened 3d convolutions that are recursively called by this
+        implementation.
+    """
+    conv_layers = []
+    if isinstance(third_party, Conv_Nd_third_party):
+        for layer in third_party.conv_layers:
+            conv_layers += _flattened_conv_layers(layer)
+    else:
+        conv_layers.append(third_party)
+
+    return conv_layers
 
 
 class ConvBias(Module):
