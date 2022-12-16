@@ -302,6 +302,24 @@ CONV_5D_MODULE_CASES = [
             "bias": False,
         },
     },
+    # non-default kwargs as tuples, output of third-party PyTorch implementation disagrees.
+    # This test case is evidence that there might be a bug in the third-party
+    # implementation, because einconv and JAX agree, but einconv and third-party disagree.
+    {
+        "seed": 0,
+        "input_fn": lambda: rand(2, 2, 20, 15, 10, 15, 20),
+        "in_channels": 2,
+        "out_channels": 4,
+        "kernel_size": (5, 4, 2, 3, 4),
+        "conv_kwargs": {
+            "stride": (4, 3, 1, 2, 4),
+            "padding": (0, 1, 0, 0, 0),
+            # "dilation": (2, 1, 3, 2, 1), # not supported by 3rd party implementation
+            "groups": 2,
+            "padding_mode": "zeros",
+            "bias": False,
+        },
+    },
 ]
 CONV_5D_MODULE_IDS = [make_id(case) for case in CONV_5D_MODULE_CASES]
 
