@@ -97,29 +97,6 @@ def test_Einconv3d(case: Dict, device: device, dtype: Union[torch.dtype, None] =
     CONV_4D_MODULE_CASES + CONV_5D_MODULE_CASES + CONV_6D_MODULE_CASES,
     ids=CONV_4D_MODULE_IDS + CONV_5D_MODULE_IDS + CONV_6D_MODULE_IDS,
 )
-def test_Einconv_higher_d_integration(
-    case: Dict, device: device, dtype: Union[torch.dtype, None] = None
-):
-    """Run a forward pass of einconv's Einconv>3d layer without verifying correctness.
-
-    Args:
-        case: Dictionary describing the test case.
-        device: Device for executing the test.
-        dtype: Data type assumed by the layer. Default: ``None`` (``torch.float32``).
-    """
-    manual_seed(case["seed"])
-    x = case["input_fn"]().to(device)
-    N = x.dim() - 2
-
-    einconv_module_from_case(N, case, device, dtype=dtype)(x)
-
-
-@mark.parametrize("device", DEVICES, ids=DEVICE_IDS)
-@mark.parametrize(
-    "case",
-    CONV_4D_MODULE_CASES + CONV_5D_MODULE_CASES + CONV_6D_MODULE_CASES,
-    ids=CONV_4D_MODULE_IDS + CONV_5D_MODULE_IDS + CONV_6D_MODULE_IDS,
-)
 def test_Einconv_higher_d(
     case: Dict, device: device, dtype: Union[torch.dtype, None] = None
 ):
