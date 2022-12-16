@@ -28,9 +28,10 @@ def conv_index_pattern(
     Args:
         input_size: Number of pixels along dimension.
         kernel_size: Kernel size along dimension.
-        stride: Stride along dimension.
-        padding: Padding along dimension. Can be an integer or a string.
-        dilation: Dilation along dimension.
+        stride: Stride along dimension. Default: ``1``.
+        padding: Padding along dimension. Can be an integer or a string. Allowed
+            strings are ``'same'`` and ``'valid'``. Default: ``0``.
+        dilation: Dilation along dimension. Default: ``1``.
         device: Execution device. Default: ``'cpu'``.
 
     Returns:

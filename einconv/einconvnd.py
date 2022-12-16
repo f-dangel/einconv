@@ -50,7 +50,7 @@ class EinconvNd(Module):
                 spatial dimensions), or an ``N``-tuple of integers. Default: ``1``.
             padding: Padding of the convolution. Can be a single integer (shared along
                 all spatial dimensions), an ``N``-tuple of integers, or a string.
-                Default: ``0``.
+                Default: ``0``. Allowed strings are ``'same'`` and ``'valid'``.
             dilation: Dilation of the convolution. Can be a single integer (shared along
                 all spatial dimensions), or an ``N``-tuple of integers. Default: ``1``.
             groups: How to split the input into groups. Default: ``1``.
@@ -220,7 +220,8 @@ def einconvNd(
         stride: Stride of the convolution. Can be a single integer (shared along all
             spatial dimensions), or an ``N``-tuple of integers. Default: ``1``.
         padding: Padding of the convolution. Can be a single integer (shared along all
-            spatial dimensions), or an ``N``-tuple of integers. Default: ``0``.
+            spatial dimensions), an ``N``-tuple of integers, or a string. Allowed
+            strings are ``'same'`` and ``'valid'``. Default: ``0``.
         dilation: Dilation of the convolution. Can be a single integer (shared along all
             spatial dimensions), or an ``N``-tuple of integers. Default: ``1``.
         groups: How to split the input into groups. Default: ``1``.
