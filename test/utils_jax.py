@@ -19,7 +19,34 @@ def jax_convNd(
     dilation: Union[int, Tuple[int, ...]] = 1,
     groups: int = 1,
 ) -> torch.Tensor:
-    """JAX implementation of ``nn.functional.convNd``."""
+    """JAX implementation of ``nn.functional.convNd``.
+
+    ``N`` is determined from the input tensor: It's first axis is the batch dimension,
+    the second axis the channel dimension, and the remaining number of dimensions is
+    interpreted as spatial dimension (with number of spatial dimensions ``N``)
+
+    Args:
+        input: Input of the convolution. Has shape ``[batch_size,
+            in_channels, *]`` where ``*`` can be an arbitrary shape. The
+            convolution dimension is ``len(*)``.
+        weight: Kernel of the convolution. Has shape ``[out_channels,
+            in_channels / groups, *]`` where ``*`` contains the kernel sizes and has
+            length ``N``.
+        bias: Optional bias vector of the convolution. Has shape ``[out_channels]``.
+            Default: ``None``.
+        stride: Stride of the convolution. Can be a single integer (shared along all
+            spatial dimensions), or an ``N``-tuple of integers. Default: ``1``.
+        padding: Padding of the convolution. Can be a single integer (shared along all
+            spatial dimensions), an ``N``-tuple of integers, or a string. Allowed
+            strings are ``'same'`` and ``'valid'``. Default: ``0``.
+        dilation: Dilation of the convolution. Can be a single integer (shared along all
+            spatial dimensions), or an ``N``-tuple of integers. Default: ``1``.
+        groups: How to split the input into groups. Default: ``1``.
+
+    Returns:
+        Result of the convolution. Has shape ``[batch_size, out_channels, *]`` where
+        ``*`` is the the spatial output dimension shape.
+    """
     N = input.dim() - 2
 
     # convert torch Tensors to JAX arrays
