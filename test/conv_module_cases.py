@@ -55,6 +55,20 @@ CONV_1D_MODULE_CASES = [
             "bias": True,
         },
     },
+    # padding specified as str
+    {
+        "seed": 0,
+        "input_fn": lambda: rand(2, 6, 71),
+        "in_channels": 6,
+        "out_channels": 9,
+        "kernel_size": (5,),
+        "conv_kwargs": {
+            "padding": "same",
+            "dilation": (2,),
+            "groups": 3,
+            "bias": True,
+        },
+    },
 ]
 
 CONV_1D_MODULE_IDS = [make_id(case) for case in CONV_1D_MODULE_CASES]
@@ -103,6 +117,20 @@ CONV_2D_MODULE_CASES = [
             "dilation": (2, 1),
             "groups": 3,
             "padding_mode": "zeros",
+            "bias": True,
+        },
+    },
+    # padding specified as str
+    {
+        "seed": 0,
+        "input_fn": lambda: rand(2, 6, 63, 52),
+        "in_channels": 6,
+        "out_channels": 9,
+        "kernel_size": (5, 4),
+        "conv_kwargs": {
+            "padding": "same",
+            "dilation": (1, 2),
+            "groups": 3,
             "bias": True,
         },
     },
@@ -155,6 +183,20 @@ CONV_3D_MODULE_CASES = [
             "bias": True,
         },
     },
+    # padding specified as str
+    {
+        "seed": 0,
+        "input_fn": lambda: rand(2, 6, 37, 41, 28),
+        "in_channels": 6,
+        "out_channels": 9,
+        "kernel_size": (5, 4, 3),
+        "conv_kwargs": {
+            "padding": "same",
+            "dilation": (2, 1, 3),
+            "groups": 3,
+            "bias": True,
+        },
+    },
 ]
 CONV_3D_MODULE_IDS = [make_id(case) for case in CONV_3D_MODULE_CASES]
 
@@ -196,6 +238,20 @@ CONV_4D_MODULE_CASES = [
             "dilation": (2, 1, 3, 2),
             "groups": 2,
             "padding_mode": "zeros",
+            "bias": True,
+        },
+    },
+    # padding specified as str
+    {
+        "seed": 0,
+        "input_fn": lambda: rand(2, 2, 21, 26, 33, 17),
+        "in_channels": 2,
+        "out_channels": 4,
+        "kernel_size": (5, 5, 4, 3),
+        "conv_kwargs": {
+            "padding": "same",
+            "dilation": (2, 1, 3, 2),
+            "groups": 2,
             "bias": True,
         },
     },
