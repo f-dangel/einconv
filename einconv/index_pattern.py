@@ -1,5 +1,7 @@
 """Contains functionality to implement convolution as tensor contraction (einsum)."""
 
+from typing import Union
+
 import torch
 from torch import Tensor, arange, device, eye, ones_like, zeros
 from torch.nn.functional import conv1d
@@ -11,6 +13,7 @@ def conv_index_pattern(
     input_size: int,
     kernel_size: int,
     stride: int = 1,
+    padding: Union[int, str] = 0,
     dilation: int = 1,
     device: device = cpu,
 ) -> Tensor:
@@ -26,6 +29,7 @@ def conv_index_pattern(
         input_size: Number of pixels along dimension.
         kernel_size: Kernel size along dimension.
         stride: Stride along dimension.
+        padding: Padding along dimension. Can be an integer or a string.
         dilation: Dilation along dimension.
         device: Execution device. Default: ``'cpu'``.
 
@@ -34,10 +38,17 @@ def conv_index_pattern(
         the index pattern. Its element ``[i, o, k]`` is ``True`` If element ``i`` if the
         input element ``i`` contributes to output element ``o`` via the ``k`` the kernel
         entry (``False`` otherwise).
+
+    Raises:
+        NotImplementedError: For string-valued paddings.
     """
+    if isinstance(padding, str):
+        raise NotImplementedError("String-valued padding not yet supported.")
+
+    padded_input_size = input_size + 2 * padding
     in_idxs = (
         arange(
-            end=input_size,
+            end=padded_input_size,
             dtype=torch.int32 if dilation == 1 else torch.float32,
             device=device,
         )
@@ -57,8 +68,9 @@ def conv_index_pattern(
     # scatter True to [k, o, out_idxs[k, o]] ∀ k, o
     output_size = out_idxs.shape[1]
     pattern = zeros(
-        kernel_size, output_size, input_size, dtype=torch.bool, device=device
+        kernel_size, output_size, padded_input_size, dtype=torch.bool, device=device
     )
     pattern.scatter_add_(2, out_idxs.long(), ones_like(pattern))
+    pattern = pattern.narrow(2, padding, input_size)
 
     return pattern  # shape [kernel_size, output_size, input_size]

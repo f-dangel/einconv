@@ -8,7 +8,6 @@ from typing import List, Tuple, Union
 import torch
 from torch import Tensor, einsum, empty
 from torch.nn import Conv1d, Conv2d, Conv3d, Module, Parameter, init
-from torch.nn.functional import pad
 
 from einconv.index_pattern import conv_index_pattern
 from einconv.utils import _tuple, sync_parameters
@@ -240,26 +239,14 @@ def einconvNd(
 
     N = input.dim() - 2
 
+    (batch_size, in_channels), input_sizes = input.shape[:2], input.shape[2:]
+
     if weight.dim() != N + 2:
         raise ValueError(
             f"For Conv(N={N})d, the kernel must be {N+2}d. Got {weight.dim()}d."
         )
 
     (out_channels, _), kernel_sizes = weight.shape[:2], weight.shape[2:]
-
-    if bias is not None and (bias.dim() != 1 or bias.numel() != out_channels):
-        raise ValueError(f"Bias should have shape [{out_channels}]. Got {bias.shape}.")
-
-    # convert into tuple format
-    t_stride: Tuple[int, ...] = _tuple(stride, N)
-    t_padding: Tuple[int, ...] = _tuple(padding, N)
-    t_dilation: Tuple[int, ...] = _tuple(dilation, N)
-
-    if any(p != 0 for p in t_padding):
-        paddings = sum(([p, p] for p in reversed(t_padding)), [])
-        input = pad(input, tuple(paddings))
-
-    (batch_size, in_channels), input_sizes = input.shape[:2], input.shape[2:]
 
     if weight.shape[0] % groups != 0:
         raise ValueError(
@@ -272,11 +259,20 @@ def einconvNd(
             + f" must equal in_channels ({in_channels})."
         )
 
+    if bias is not None and (bias.dim() != 1 or bias.numel() != out_channels):
+        raise ValueError(f"Bias should have shape [{out_channels}]. Got {bias.shape}.")
+
+    # convert into tuple format
+    t_stride: Tuple[int, ...] = _tuple(stride, N)
+    t_padding: Tuple[int, ...] = _tuple(padding, N)
+    t_dilation: Tuple[int, ...] = _tuple(dilation, N)
+
     index_patterns: List[Tensor] = [
         conv_index_pattern(
             input_sizes[n],
             kernel_sizes[n],
             stride=t_stride[n],
+            padding=t_padding[n],
             dilation=t_dilation[n],
             device=input.device,
         ).to(input.dtype)
