@@ -38,17 +38,11 @@ def conv_index_pattern(
         the index pattern. Its element ``[i, o, k]`` is ``True`` If element ``i`` if the
         input element ``i`` contributes to output element ``o`` via the ``k`` the kernel
         entry (``False`` otherwise).
-
-    Raises:
-        NotImplementedError: For string-valued paddings.
     """
-    if isinstance(padding, str):
-        raise NotImplementedError("String-valued padding not yet supported.")
-
-    padded_input_size = input_size + 2 * padding
     in_idxs = (
         arange(
-            end=padded_input_size,
+            start=1,  # index 0 is used for elements from padding
+            end=input_size + 1,
             dtype=torch.int32 if dilation == 1 else torch.float32,
             device=device,
         )
@@ -59,7 +53,7 @@ def conv_index_pattern(
         1
     )  # shape [C_out=kernel_size, C_in=1, K=kernel_size], entries [k, 1, k] = 1 else 0
     out_idxs = (
-        conv1d(in_idxs, weight, stride=stride, dilation=dilation)
+        conv1d(in_idxs, weight, stride=stride, padding=padding, dilation=dilation)
         .squeeze(0)
         .unsqueeze(-1)
     )  # shape [K, O, 1], entry [k, o, 0] contains index of the input that
@@ -68,9 +62,9 @@ def conv_index_pattern(
     # scatter True to [k, o, out_idxs[k, o]] ∀ k, o
     output_size = out_idxs.shape[1]
     pattern = zeros(
-        kernel_size, output_size, padded_input_size, dtype=torch.bool, device=device
+        kernel_size, output_size, input_size + 1, dtype=torch.bool, device=device
     )
     pattern.scatter_add_(2, out_idxs.long(), ones_like(pattern))
-    pattern = pattern.narrow(2, padding, input_size)
+    pattern = pattern.narrow(2, 1, input_size)  # remove the padding bin
 
     return pattern  # shape [kernel_size, output_size, input_size]

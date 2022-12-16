@@ -23,7 +23,7 @@ class EinconvNd(Module):
         out_channels: int,
         kernel_size: Union[int, Tuple[int, ...]],
         stride: Union[int, Tuple[int, ...]] = 1,
-        padding: Union[int, Tuple[int, ...]] = 0,
+        padding: Union[int, Tuple[int, ...], str] = 0,
         dilation: Union[int, Tuple[int, ...]] = 1,
         groups: int = 1,
         bias: bool = True,
@@ -49,7 +49,8 @@ class EinconvNd(Module):
             stride: Stride of the convolution. Can be a single integer (shared along all
                 spatial dimensions), or an ``N``-tuple of integers. Default: ``1``.
             padding: Padding of the convolution. Can be a single integer (shared along
-                all spatial dimensions), or an ``N``-tuple of integers. Default: ``0``.
+                all spatial dimensions), an ``N``-tuple of integers, or a string.
+                Default: ``0``.
             dilation: Dilation of the convolution. Can be a single integer (shared along
                 all spatial dimensions), or an ``N``-tuple of integers. Default: ``1``.
             groups: How to split the input into groups. Default: ``1``.
@@ -85,7 +86,7 @@ class EinconvNd(Module):
         self.out_channels = out_channels
         self.kernel_size = _tuple(kernel_size, N)
         self.stride = _tuple(stride, N)
-        self.padding = _tuple(padding, N)
+        self.padding = padding if isinstance(padding, str) else _tuple(padding, N)
         self.padding_mode = padding_mode
         self.dilation = _tuple(dilation, N)
         self.groups = groups
@@ -179,7 +180,7 @@ class EinconvNd(Module):
             "{N}, {in_channels}, {out_channels}, kernel_size={kernel_size}"
             ", stride={stride}"
         )
-        if self.padding != (0,) * len(self.padding):
+        if (self.padding != (0,) * len(self.padding)) or isinstance(self.padding, str):
             s += ", padding={padding}"
         if self.dilation != (1,) * len(self.dilation):
             s += ", dilation={dilation}"
@@ -229,14 +230,10 @@ def einconvNd(
         ``*`` is the the spatial output dimension shape.
 
     Raises:
-        NotImplementedError: If the supplied hyperparameters are not supported.
         ValueError: If bias has incorrect shape.
         ValueError: If weight dimension is incorrect.
         ValueError: If weight shape is invalid.
     """
-    if isinstance(padding, str):
-        raise NotImplementedError("String-valued padding not yet supported.")
-
     N = input.dim() - 2
 
     (batch_size, in_channels), input_sizes = input.shape[:2], input.shape[2:]
@@ -264,7 +261,9 @@ def einconvNd(
 
     # convert into tuple format
     t_stride: Tuple[int, ...] = _tuple(stride, N)
-    t_padding: Tuple[int, ...] = _tuple(padding, N)
+    t_padding: Union[Tuple[int, ...], str] = (
+        padding if isinstance(padding, str) else _tuple(padding, N)
+    )
     t_dilation: Tuple[int, ...] = _tuple(dilation, N)
 
     index_patterns: List[Tensor] = [
@@ -272,7 +271,7 @@ def einconvNd(
             input_sizes[n],
             kernel_sizes[n],
             stride=t_stride[n],
-            padding=t_padding[n],
+            padding=padding if isinstance(padding, str) else t_padding[n],
             dilation=t_dilation[n],
             device=input.device,
         ).to(input.dtype)
