@@ -350,6 +350,7 @@ def conv_module_from_case(
     Args:
         N: Convolution dimension.
         case: Dictionary describing the module.
+        device: Device to load the module to.
         dtype: Data type assumed by the layer. Default: ``None`` (``torch.float32``).
 
     Returns:
@@ -374,6 +375,7 @@ def einconv_module_from_case(
     Args:
         N: Convolution dimension.
         case: Dictionary describing the module.
+        device: Device to load the module to.
         dtype: Data type assumed by the layer. Default: ``None`` (``torch.float32``).
 
     Returns:
