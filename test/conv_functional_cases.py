@@ -56,6 +56,14 @@ CONV_1D_FUNCTIONAL_CASES = [
         "bias_fn": lambda: None,
         "conv_kwargs": {"dilation": 2},
     },
+    # padding supplied as string
+    {
+        "seed": 0,
+        "input_fn": lambda: rand(2, 3, 20),
+        "weight_fn": lambda: rand(4, 3, 5),
+        "bias_fn": lambda: rand(4),
+        "conv_kwargs": {"padding": "same"},
+    },
 ]
 CONV_1D_FUNCTIONAL_IDS = [make_id(case) for case in CONV_1D_FUNCTIONAL_CASES]
 
@@ -110,6 +118,14 @@ CONV_2D_FUNCTIONAL_CASES = [
         "weight_fn": lambda: rand(4, 3, 5, 6),
         "bias_fn": lambda: None,
         "conv_kwargs": {"dilation": 2},
+    },
+    # padding supplied as string
+    {
+        "seed": 0,
+        "input_fn": lambda: rand(2, 3, 50, 40),
+        "weight_fn": lambda: rand(4, 3, 5, 3),
+        "bias_fn": lambda: rand(4),
+        "conv_kwargs": {"padding": "same", "dilation": (1, 2)},
     },
 ]
 CONV_2D_FUNCTIONAL_IDS = [make_id(case) for case in CONV_2D_FUNCTIONAL_CASES]
@@ -170,6 +186,14 @@ CONV_3D_FUNCTIONAL_CASES = [
         "bias_fn": lambda: None,
         "conv_kwargs": {"dilation": 2},
     },
+    # padding supplied as string
+    {
+        "seed": 0,
+        "input_fn": lambda: rand(2, 3, 50, 40, 30),
+        "weight_fn": lambda: rand(4, 3, 5, 3, 2),
+        "bias_fn": lambda: rand(4),
+        "conv_kwargs": {"padding": "same", "dilation": (1, 2, 2)},
+    },
 ]
 CONV_3D_FUNCTIONAL_IDS = [make_id(case) for case in CONV_3D_FUNCTIONAL_CASES]
 
@@ -188,18 +212,23 @@ CONV_4D_FUNCTIONAL_CASES = [
     # non-trivial kwargs, non-trivial bias
     {
         "seed": 0,
-        # (batch_size, in_channels, num_pixels_h, num_pixels_w)
         "input_fn": lambda: rand(2, 2, 40, 35, 30, 25),
-        # (out_channels, in_channels // groups, kernel_size_h, kernel_size_w)
         "weight_fn": lambda: rand(4, 1, 5, 5, 4, 3),
         "bias_fn": lambda: rand(4),
-        # stride, padding, dilation, groups
         "conv_kwargs": {
             "padding": (2, 1, 0, 1),
             "stride": (3, 2, 1, 2),
             "dilation": (3, 2, 3, 1),
             "groups": 2,
         },
+    },
+    # padding supplied as string
+    {
+        "seed": 0,
+        "input_fn": lambda: rand(2, 2, 10, 8, 6, 5),
+        "weight_fn": lambda: rand(4, 1, 5, 5, 4, 3),
+        "bias_fn": lambda: rand(4),
+        "conv_kwargs": {"padding": "same", "dilation": (2, 2, 2, 1), "groups": 2},
     },
 ]
 CONV_4D_FUNCTIONAL_IDS = [make_id(case) for case in CONV_4D_FUNCTIONAL_CASES]
