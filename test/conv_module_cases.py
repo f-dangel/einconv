@@ -292,6 +292,9 @@ CONV_5D_MODULE_CASES = [
             # (0, 0, 0, 0, 1)
             # Something seems to be wrong with the first padding axes, but
             # I don't know why. Could the bug be in the 3rd-party implementation?
+            # https://discuss.pytorch.org/t/is-there-a-way-to-realize-4d-convolution-using-the-convnd-function/5999/6  # noqa: B950
+            # mentions that implementing N>3 convolution using multiple 3d convolutions
+            # might come with some 'boundary effects / issues'
             "padding": (2, 0, 1, 1, 3),
             # "dilation": (2, 1, 3, 2, 1), # not supported by 3rd party implementation
             "groups": 2,
@@ -337,6 +340,9 @@ CONV_6D_MODULE_CASES = [
             # (2, 0, 0, 2, 1, 1),
             # Something seems to be wrong with the second and third padding axes, but
             # I don't know why. Could the bug be in the 3rd-party implementation?
+            # https://discuss.pytorch.org/t/is-there-a-way-to-realize-4d-convolution-using-the-convnd-function/5999/6  # noqa: B950
+            # mentions that implementing N>3 convolution using multiple 3d convolutions
+            # might come with some 'boundary effects / issues'
             "padding": (2, 0, 0, 2, 1, 1),
             # "dilation": (2, 1, 3, 2, 1, 1), # not supported by 3rd party implem.
             "groups": 2,
