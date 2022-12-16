@@ -235,10 +235,9 @@ def einconvNd(
         ValueError: If weight dimension is incorrect.
         ValueError: If weight shape is invalid.
     """
-    if isinstance(padding, str):
-        raise NotImplementedError("String-valued padding not yet supported.")
-
     N = input.dim() - 2
+
+    (batch_size, in_channels), input_sizes = input.shape[:2], input.shape[2:]
 
     if weight.dim() != N + 2:
         raise ValueError(
@@ -246,20 +245,6 @@ def einconvNd(
         )
 
     (out_channels, _), kernel_sizes = weight.shape[:2], weight.shape[2:]
-
-    if bias is not None and (bias.dim() != 1 or bias.numel() != out_channels):
-        raise ValueError(f"Bias should have shape [{out_channels}]. Got {bias.shape}.")
-
-    # convert into tuple format
-    t_stride: Tuple[int, ...] = _tuple(stride, N)
-    t_padding: Tuple[int, ...] = _tuple(padding, N)
-    t_dilation: Tuple[int, ...] = _tuple(dilation, N)
-
-    if any(p != 0 for p in t_padding):
-        paddings = sum(([p, p] for p in reversed(t_padding)), [])
-        input = pad(input, tuple(paddings))
-
-    (batch_size, in_channels), input_sizes = input.shape[:2], input.shape[2:]
 
     if weight.shape[0] % groups != 0:
         raise ValueError(
@@ -272,11 +257,20 @@ def einconvNd(
             + f" must equal in_channels ({in_channels})."
         )
 
+    if bias is not None and (bias.dim() != 1 or bias.numel() != out_channels):
+        raise ValueError(f"Bias should have shape [{out_channels}]. Got {bias.shape}.")
+
+    # convert into tuple format
+    t_stride: Tuple[int, ...] = _tuple(stride, N)
+    t_padding: Tuple[int, ...] = _tuple(padding, N)
+    t_dilation: Tuple[int, ...] = _tuple(dilation, N)
+
     index_patterns: List[Tensor] = [
         conv_index_pattern(
             input_sizes[n],
             kernel_sizes[n],
             stride=t_stride[n],
+            padding=t_padding[n],
             dilation=t_dilation[n],
             device=input.device,
         ).to(input.dtype)
