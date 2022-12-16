@@ -1,11 +1,12 @@
 """Utility functions for tests comparing against JAX's N-dimensional convolution."""
 
-from typing import Tuple, Union
+from typing import Callable, Tuple, Union
 
 import jax
 import numpy
 import torch
 
+from einconv.einconvnd import EinconvNd
 from einconv.utils import _tuple
 
 
@@ -55,3 +56,34 @@ def jax_convNd(
         output += bias_expanded.expand_as(output)
 
     return output
+
+
+def to_ConvNd_jax(einconv_module: EinconvNd) -> Callable[[torch.Tensor], torch.Tensor]:
+    """Create JAX convolution 'layer' (callable) for high-dimensional convolutions.
+
+    Args:
+        einconv_module: Einconv layer.
+
+    Returns:
+        Convolution layer for high-dimensional convolutions. Uses JAX under the hood.
+
+    Raises:
+        NotImplementedError: For unsupported padding modes.
+    """
+    if einconv_module.padding_mode != "zeros":
+        raise NotImplementedError("Only padding_mode='zeros' supported.")
+
+    def ConvNd_jax(input: torch.Tensor) -> torch.Tensor:
+        return jax_convNd(
+            input,
+            einconv_module.weight.data.clone(),
+            bias=None
+            if einconv_module.bias is None
+            else einconv_module.bias.data.clone(),
+            stride=einconv_module.stride,
+            padding=einconv_module.padding,
+            dilation=einconv_module.dilation,
+            groups=einconv_module.groups,
+        )
+
+    return ConvNd_jax

@@ -17,6 +17,7 @@ from test.conv_module_cases import (
     einconv_module_from_case,
 )
 from test.utils import DEVICE_IDS, DEVICES, report_nonclose
+from test.utils_jax import to_ConvNd_jax
 from test.utils_third_party import to_ConvNd_third_party
 from typing import Dict, Union
 
@@ -143,3 +144,32 @@ def test_Einconv_higher_d(
     third_party_output = third_party_module(x)
 
     report_nonclose(einconv_output, third_party_output, atol=1e-6)
+
+
+@mark.parametrize("device", DEVICES, ids=DEVICE_IDS)
+@mark.parametrize(
+    "case",
+    CONV_4D_MODULE_CASES + CONV_5D_MODULE_CASES + CONV_6D_MODULE_CASES,
+    ids=CONV_4D_MODULE_IDS + CONV_5D_MODULE_IDS + CONV_6D_MODULE_IDS,
+)
+def test_Einconv_higher_d_jax(
+    case: Dict, device: device, dtype: Union[torch.dtype, None] = None
+):
+    """Compare forward pass of einconv's Einconv4d layer with JAX implementation.
+
+    Args:
+        case: Dictionary describing the test case.
+        device: Device for executing the test.
+        dtype: Data type assumed by the layer. Default: ``None`` (``torch.float32``).
+    """
+    manual_seed(case["seed"])
+    x = case["input_fn"]().to(device)
+    N = x.dim() - 2
+
+    einconv_module = einconv_module_from_case(N, case, device, dtype=dtype)
+    einconv_output = einconv_module(x)
+
+    jax_module = to_ConvNd_jax(einconv_module)
+    jax_output = jax_module(x)
+
+    report_nonclose(einconv_output, jax_output, atol=1e-6)
