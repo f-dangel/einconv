@@ -99,19 +99,6 @@ def test_einconv3d(case: Dict, device: device):
 
 @mark.parametrize("device", DEVICES, ids=DEVICE_IDS)
 @mark.parametrize("case", CONV_4D_FUNCTIONAL_CASES, ids=CONV_4D_FUNCTIONAL_IDS)
-def test_einconv4d_integration(case: Dict, device: device):
-    """Run einconv's einconvNd for N=4 without verifying correctness.
-
-    Args:
-        case: Dictionary describing the test case.
-        device: Device for executing the test.
-    """
-    x, weight, bias = _setup(case, device)
-    einconvNd(x, weight, bias=bias, **case["conv_kwargs"])
-
-
-@mark.parametrize("device", DEVICES, ids=DEVICE_IDS)
-@mark.parametrize("case", CONV_4D_FUNCTIONAL_CASES, ids=CONV_4D_FUNCTIONAL_IDS)
 def test_einconv4d(case: Dict, device: device):
     """Compare einconv's einconvNd for N=4 with JAX implementation.
 
