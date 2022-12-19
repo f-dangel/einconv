@@ -42,7 +42,7 @@ def conv_index_pattern(
     """
     in_idxs_dtype = torch.int32
     # in some cases, conv1d does not support int32 inputs.
-    if dilation == 1 or device != cpu:
+    if dilation != 1 or device != cpu:
         in_idxs_dtype = torch.float32
 
     in_idxs = (
