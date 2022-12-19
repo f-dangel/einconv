@@ -40,11 +40,16 @@ def conv_index_pattern(
         input element ``i`` contributes to output element ``o`` via the ``k`` the kernel
         entry (``False`` otherwise).
     """
+    in_idxs_dtype = torch.int32
+    # in some cases, conv1d does not support int32 inputs.
+    if dilation == 1 or device != cpu:
+        in_idxs_dtype = torch.float32
+
     in_idxs = (
         arange(
             start=1,  # index 0 is used for elements from padding
             end=input_size + 1,
-            dtype=torch.int32 if dilation == 1 else torch.float32,
+            dtype=in_idxs_dtype,
             device=device,
         )
         .unsqueeze(0)
