@@ -5,8 +5,9 @@ from __future__ import annotations
 from math import sqrt
 from typing import List, Tuple, Union
 
+import sparse
 import torch
-from torch import Tensor, einsum, empty
+from torch import Tensor, empty
 from torch.nn import Conv1d, Conv2d, Conv3d, Module, Parameter, init
 
 from einconv.index_pattern import conv_index_pattern
@@ -279,16 +280,26 @@ def einconvNd(
         for n in range(N)
     ]
 
+    use_sparse = True
+    if use_sparse:
+        input = input.cpu().numpy()
+        index_patterns = [
+            sparse.COO.from_numpy(pattern.cpu().numpy()) for pattern in index_patterns
+        ]
+
     equation = _conv_einsum_equation(N)
 
-    output = einsum(
+    output = sparse.einsum(
         equation,
         input.reshape(batch_size, groups, in_channels // groups, *input_sizes),
         *index_patterns,
         weight.reshape(
             groups, out_channels // groups, in_channels // groups, *kernel_sizes
-        ),
+        )
+        .cpu()
+        .numpy(),
     )
+    output = torch.from_numpy(output.todense())
     output = output.flatten(start_dim=1, end_dim=2)
 
     if bias is not None:
