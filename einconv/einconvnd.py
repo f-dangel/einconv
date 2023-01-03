@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from math import sqrt
 from typing import List, Tuple, Union
 
@@ -11,6 +12,16 @@ from torch.nn import Conv1d, Conv2d, Conv3d, Module, Parameter, init
 
 from einconv.index_pattern import conv_index_pattern
 from einconv.utils import _tuple, sync_parameters
+
+HERE = os.path.abspath(__file__)
+HEREDIR = os.path.dirname(HERE)
+ROOTDIR = os.path.dirname(HEREDIR)
+PYTACODIR = os.path.join(ROOTDIR, "taco", "build", "lib")
+
+import sys
+
+sys.path.append(PYTACODIR)
+import pytaco
 
 
 class EinconvNd(Module):
@@ -279,20 +290,39 @@ def einconvNd(
         for n in range(N)
     ]
 
-    use_sparse = True
-    if use_sparse:
-        index_patterns = [pattern.to_sparse() for pattern in index_patterns]
+    taco_input = pytaco.from_array(
+        input.reshape(batch_size, groups, in_channels // groups, *input_sizes)
+        .detach()
+        .cpu()
+        .numpy()
+    )
+
+    taco_index_patterns = []
+    for pattern in index_patterns:
+        taco_pattern = pytaco.tensor(list(pattern.shape), pytaco.compressed)
+        for i in range(pattern.shape[0]):
+            for j in range(pattern.shape[1]):
+                for k in range(pattern.shape[2]):
+                    if pattern[i, j, k].item() == 1:
+                        taco_pattern.insert([i, j, k], pattern[i, j, k].item())
+
+        taco_pattern.pack()
+        taco_index_patterns.append(taco_pattern)
+
+    taco_weight = pytaco.from_array(
+        weight.reshape(
+            groups, out_channels // groups, in_channels // groups, *kernel_sizes
+        )
+        .detach()
+        .cpu()
+        .numpy()
+    )
 
     equation = _conv_einsum_equation(N)
 
-    output = einsum(
-        equation,
-        input.reshape(batch_size, groups, in_channels // groups, *input_sizes),
-        *index_patterns,
-        weight.reshape(
-            groups, out_channels // groups, in_channels // groups, *kernel_sizes
-        ),
-    )
+    output = pytaco.einsum(equation, taco_input, *taco_index_patterns, taco_weight)
+    output = torch.from_numpy(output.to_array())
+
     output = output.flatten(start_dim=1, end_dim=2)
 
     if bias is not None:
