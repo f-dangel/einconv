@@ -5,9 +5,34 @@ from __future__ import annotations
 from math import sqrt
 from typing import List, Tuple, Union
 
-import sparse
 import torch
-from torch import Tensor, empty
+
+old_reshape = torch.reshape
+
+
+def new_reshape(input, shape):
+    if input.is_sparse:
+        raise Exception("New torch reshape on sparse tensor")
+    print("New torch reshape on dense tensor")
+    return old_reshape(input, shape)
+
+
+torch.reshape = new_reshape
+
+old_tensor_reshape = torch.Tensor.reshape
+
+
+def new_tensor_reshape(self, *shape):
+    if self.is_sparse:
+        raise ValueError("New torch tensor reshape on sparse tensor")
+    print("New torch tensor reshape on dense tensor")
+    return old_tensor_reshape(self, *shape)
+
+
+torch.Tensor.reshape = new_tensor_reshape
+
+
+from torch import Tensor, einsum, empty
 from torch.nn import Conv1d, Conv2d, Conv3d, Module, Parameter, init
 
 from einconv.index_pattern import conv_index_pattern
@@ -282,24 +307,18 @@ def einconvNd(
 
     use_sparse = True
     if use_sparse:
-        input = input.cpu().numpy()
-        index_patterns = [
-            sparse.COO.from_numpy(pattern.cpu().numpy()) for pattern in index_patterns
-        ]
+        index_patterns = [pattern.to_sparse() for pattern in index_patterns]
 
     equation = _conv_einsum_equation(N)
 
-    output = sparse.einsum(
+    output = einsum(
         equation,
         input.reshape(batch_size, groups, in_channels // groups, *input_sizes),
         *index_patterns,
         weight.reshape(
             groups, out_channels // groups, in_channels // groups, *kernel_sizes
-        )
-        .cpu()
-        .numpy(),
+        ),
     )
-    output = torch.from_numpy(output.todense())
     output = output.flatten(start_dim=1, end_dim=2)
 
     if bias is not None:
