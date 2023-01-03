@@ -6,32 +6,6 @@ from math import sqrt
 from typing import List, Tuple, Union
 
 import torch
-
-old_reshape = torch.reshape
-
-
-def new_reshape(input, shape):
-    if input.is_sparse:
-        raise Exception("New torch reshape on sparse tensor")
-    print("New torch reshape on dense tensor")
-    return old_reshape(input, shape)
-
-
-torch.reshape = new_reshape
-
-old_tensor_reshape = torch.Tensor.reshape
-
-
-def new_tensor_reshape(self, *shape):
-    if self.is_sparse:
-        raise ValueError("New torch tensor reshape on sparse tensor")
-    print("New torch tensor reshape on dense tensor")
-    return old_tensor_reshape(self, *shape)
-
-
-torch.Tensor.reshape = new_tensor_reshape
-
-
 from torch import Tensor, einsum, empty
 from torch.nn import Conv1d, Conv2d, Conv3d, Module, Parameter, init
 
