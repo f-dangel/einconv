@@ -1,5 +1,6 @@
 """Utility functions for ``einconv``."""
 
+from math import floor
 from typing import Any, List, Tuple, Union
 
 from torch.nn import Module
@@ -93,6 +94,22 @@ def compare_attributes(obj1: Any, obj2: Any, attributes: List[str]):
 def get_conv_paddings(
     kernel_size: int, stride: int, padding: Union[int, str], dilation: int
 ) -> Tuple[int, int]:
+    """Get left and right padding as of a convolution as integers.
+
+    Args:
+        kernel_size: Kernel size along dimension.
+        stride: Stride along dimension.
+        padding: Padding along dimension. Can be an integer or a string. Allowed
+            strings are ``'same'`` and ``'valid'``.
+        dilation: Dilation along dimension.
+
+    Returns:
+        Left and right padding.
+
+    Raises:
+        ValueError: If ``padding='same'`` and the convolution is strided.
+        ValueError: For unknown convolution strings.
+    """
     if isinstance(padding, str):
         if padding == "valid":
             padding_left, padding_right = 0, 0
@@ -113,13 +130,30 @@ def get_conv_paddings(
 
 
 def get_conv_output_size(
-    input_size: int, kernel_size: int, stride, padding, dilation
+    input_size: int,
+    kernel_size: int,
+    stride: int,
+    padding: Union[int, str],
+    dilation: int,
 ) -> int:
+    """Compute the output dimension of a convolution.
+
+    Args:
+        input_size: Number of pixels along dimension.
+        kernel_size: Kernel size along dimension.
+        stride: Stride along dimension.
+        padding: Padding along dimension. Can be an integer or a string. Allowed
+            strings are ``'same'`` and ``'valid'``.
+        dilation: Dilation along dimension.
+
+    Returns:
+        Convolution output dimension.
+    """
     padding_left, padding_right = get_conv_paddings(
         kernel_size, stride, padding, dilation
     )
 
-    return 1 + int(
+    return 1 + floor(
         (
             (input_size + padding_left + padding_right)
             - (kernel_size + (kernel_size - 1) * (dilation - 1))
