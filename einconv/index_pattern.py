@@ -1,7 +1,7 @@
 """Contains functionality to implement convolution as tensor contraction (einsum)."""
 
 from math import ceil
-from typing import Union
+from typing import Tuple, Union
 
 import torch
 from torch import Tensor, arange, device, eye, ones_like, zeros
@@ -85,28 +85,9 @@ def conv_index_pattern_logical(
     dilation: int = 1,
     device: device = cpu,
 ) -> Tensor:
-    if isinstance(padding, str):
-        if padding == "valid":
-            padding_left, padding_right = 0, 0
-        elif padding == "same":
-            if stride != 1:
-                raise ValueError(
-                    "padding='same' is not supported for strided convolutions."
-                )
-            total_padding = dilation * (kernel_size - 1)
-            padding_left = total_padding // 2
-            padding_right = total_padding - padding_left
-        else:
-            raise ValueError(f"Unknown string-value for padding: '{padding}'.")
-    else:
-        padding_left, padding_right = padding, padding
-
-    output_size = 1 + int(
-        (
-            (input_size + padding_left + padding_right)
-            - (kernel_size + (kernel_size - 1) * (dilation - 1))
-        )
-        / stride
+    padding_left, _ = get_conv_paddings(kernel_size, stride, padding, dilation)
+    output_size = get_conv_output_size(
+        input_size, kernel_size, stride, padding, dilation
     )
 
     pattern = zeros(
@@ -124,3 +105,41 @@ def conv_index_pattern_logical(
         pattern[k, o_idx, i_idx] = True
 
     return pattern
+
+
+def get_conv_paddings(
+    kernel_size: int, stride: int, padding: Union[int, str], dilation: int
+) -> Tuple[int, int]:
+    if isinstance(padding, str):
+        if padding == "valid":
+            padding_left, padding_right = 0, 0
+        elif padding == "same":
+            if stride != 1:
+                raise ValueError(
+                    "padding='same' is not supported for strided convolutions."
+                )
+            total_padding = dilation * (kernel_size - 1)
+            padding_left = total_padding // 2
+            padding_right = total_padding - padding_left
+        else:
+            raise ValueError(f"Unknown string-value for padding: '{padding}'.")
+    else:
+        padding_left, padding_right = padding, padding
+
+    return padding_left, padding_right
+
+
+def get_conv_output_size(
+    input_size: int, kernel_size: int, stride, padding, dilation
+) -> int:
+    padding_left, padding_right = get_conv_paddings(
+        kernel_size, stride, padding, dilation
+    )
+
+    return 1 + int(
+        (
+            (input_size + padding_left + padding_right)
+            - (kernel_size + (kernel_size - 1) * (dilation - 1))
+        )
+        / stride
+    )
