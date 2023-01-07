@@ -85,16 +85,21 @@ def conv_index_pattern_logical(
     dilation: int = 1,
     device: device = cpu,
 ) -> Tensor:
-    # TODO Support 'same' padding
     if isinstance(padding, str):
         if padding == "valid":
-            padding = 0
+            padding_left, padding_right = 0, 0
         elif padding == "same":
-            raise NotImplementedError("padding='same' not supported.")
+            if stride != 1:
+                raise ValueError(
+                    "padding='same' is not supported for strided convolutions."
+                )
+            total_padding = dilation * (kernel_size - 1)
+            padding_left = total_padding // 2
+            padding_right = total_padding - padding_left
         else:
             raise ValueError(f"Unknown string-value for padding: '{padding}'.")
-
-    padding_left, padding_right = padding, padding
+    else:
+        padding_left, padding_right = padding, padding
 
     output_size = 1 + int(
         (
