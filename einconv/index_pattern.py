@@ -1,5 +1,6 @@
 """Contains functionality to implement convolution as tensor contraction (einsum)."""
 
+from math import ceil
 from typing import Union
 
 import torch
@@ -105,10 +106,13 @@ def conv_index_pattern_logical(
     )
 
     for k in range(kernel_size):
-        for o in range(output_size):
+        o_min = max(ceil((padding_left - k * dilation) / stride), 0)
+        o_max = min(
+            ceil((input_size + padding_left - k * dilation) / stride), output_size
+        )
+
+        for o in range(o_min, o_max):
             i = stride * o - padding_left + k * dilation
-            # TODO Integrate this constraint into o's range
-            if 0 <= i < input_size:
-                pattern[k, o, i] = True
+            pattern[k, o, i] = True
 
     return pattern
