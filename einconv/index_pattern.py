@@ -1,11 +1,13 @@
 """Contains functionality to implement convolution as tensor contraction (einsum)."""
 
 from math import ceil
-from typing import Tuple, Union
+from typing import Union
 
 import torch
 from torch import Tensor, arange, device, eye, ones_like, zeros
 from torch.nn.functional import conv1d
+
+from einconv.utils import get_conv_output_size, get_conv_paddings
 
 cpu = device("cpu")
 
@@ -19,6 +21,8 @@ def conv_index_pattern(
     device: device = cpu,
 ) -> Tensor:
     """Compute the 'dummy tensor' containing the index pattern of a conv. dimension.
+
+    Uses one-dimensional convolution under the hood.
 
     The dummy tensor is denoted 𝒫 in the paper (see page 3):
 
@@ -85,14 +89,39 @@ def conv_index_pattern_logical(
     dilation: int = 1,
     device: device = cpu,
 ) -> Tensor:
-    padding_left, _ = get_conv_paddings(kernel_size, stride, padding, dilation)
+    """Compute the 'dummy tensor' containing the index pattern of a conv. dimension.
+
+    Uses logical statements under the hood.
+
+    The dummy tensor is denoted 𝒫 in the paper (see page 3):
+
+    - Hayashi, K., Yamaguchi, T., Sugawara, Y., & Maeda, S. (2019). Exploring
+      unexplored tensor network decompositions for convolutional neural networks.
+      Advances in Neural Information Processing Systems (NeurIPS).
+
+    Args:
+        input_size: Number of pixels along dimension.
+        kernel_size: Kernel size along dimension.
+        stride: Stride along dimension. Default: ``1``.
+        padding: Padding along dimension. Can be an integer or a string. Allowed
+            strings are ``'same'`` and ``'valid'``. Default: ``0``.
+        dilation: Dilation along dimension. Default: ``1``.
+        device: Execution device. Default: ``'cpu'``.
+
+    Returns:
+        Boolean tensor of shape ``[input_size, output_size, kernel_size]`` representing
+        the index pattern. Its element ``[i, o, k]`` is ``True`` If element ``i`` if the
+        input element ``i`` contributes to output element ``o`` via the ``k`` the kernel
+        entry (``False`` otherwise).
+    """
     output_size = get_conv_output_size(
         input_size, kernel_size, stride, padding, dilation
     )
-
     pattern = zeros(
         kernel_size, output_size, input_size, dtype=torch.bool, device=device
     )
+
+    padding_left, _ = get_conv_paddings(kernel_size, stride, padding, dilation)
 
     for k in range(kernel_size):
         o_min = max(ceil((padding_left - k * dilation) / stride), 0)
@@ -105,41 +134,3 @@ def conv_index_pattern_logical(
         pattern[k, o_idx, i_idx] = True
 
     return pattern
-
-
-def get_conv_paddings(
-    kernel_size: int, stride: int, padding: Union[int, str], dilation: int
-) -> Tuple[int, int]:
-    if isinstance(padding, str):
-        if padding == "valid":
-            padding_left, padding_right = 0, 0
-        elif padding == "same":
-            if stride != 1:
-                raise ValueError(
-                    "padding='same' is not supported for strided convolutions."
-                )
-            total_padding = dilation * (kernel_size - 1)
-            padding_left = total_padding // 2
-            padding_right = total_padding - padding_left
-        else:
-            raise ValueError(f"Unknown string-value for padding: '{padding}'.")
-    else:
-        padding_left, padding_right = padding, padding
-
-    return padding_left, padding_right
-
-
-def get_conv_output_size(
-    input_size: int, kernel_size: int, stride, padding, dilation
-) -> int:
-    padding_left, padding_right = get_conv_paddings(
-        kernel_size, stride, padding, dilation
-    )
-
-    return 1 + int(
-        (
-            (input_size + padding_left + padding_right)
-            - (kernel_size + (kernel_size - 1) * (dilation - 1))
-        )
-        / stride
-    )

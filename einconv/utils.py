@@ -88,3 +88,41 @@ def compare_attributes(obj1: Any, obj2: Any, attributes: List[str]):
         attr2 = getattr(obj2, attr)
         if attr1 != attr2:
             raise ValueError(f"'{attr}' attribute does not match: {attr1} ≠ {attr2}")
+
+
+def get_conv_paddings(
+    kernel_size: int, stride: int, padding: Union[int, str], dilation: int
+) -> Tuple[int, int]:
+    if isinstance(padding, str):
+        if padding == "valid":
+            padding_left, padding_right = 0, 0
+        elif padding == "same":
+            if stride != 1:
+                raise ValueError(
+                    "padding='same' is not supported for strided convolutions."
+                )
+            total_padding = dilation * (kernel_size - 1)
+            padding_left = total_padding // 2
+            padding_right = total_padding - padding_left
+        else:
+            raise ValueError(f"Unknown string-value for padding: '{padding}'.")
+    else:
+        padding_left, padding_right = padding, padding
+
+    return padding_left, padding_right
+
+
+def get_conv_output_size(
+    input_size: int, kernel_size: int, stride, padding, dilation
+) -> int:
+    padding_left, padding_right = get_conv_paddings(
+        kernel_size, stride, padding, dilation
+    )
+
+    return 1 + int(
+        (
+            (input_size + padding_left + padding_right)
+            - (kernel_size + (kernel_size - 1) * (dilation - 1))
+        )
+        / stride
+    )
