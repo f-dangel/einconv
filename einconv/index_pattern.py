@@ -84,6 +84,9 @@ def conv_index_pattern_logical(
     dilation: int = 1,
     device: device = cpu,
 ) -> Tensor:
+    # TODO Support 'valid' padding
+    # TODO Support 'same' padding
+    # TODO Check padding value if string
     if isinstance(padding, str):
         raise NotImplementedError("String-valued padding not supported.")
 
@@ -101,9 +104,10 @@ def conv_index_pattern_logical(
         kernel_size, output_size, input_size, dtype=torch.bool, device=device
     )
 
-    for o in range(output_size):
-        for k in range(kernel_size):
+    for k in range(kernel_size):
+        for o in range(output_size):
             i = stride * o - padding_left + k * dilation
+            # TODO Integrate this constraint into o's range
             if 0 <= i < input_size:
                 pattern[k, o, i] = True
 
