@@ -74,3 +74,37 @@ def conv_index_pattern(
     pattern = pattern.narrow(2, 1, input_size)  # remove the padding bin
 
     return pattern  # shape [kernel_size, output_size, input_size]
+
+
+def conv_index_pattern_logical(
+    input_size: int,
+    kernel_size: int,
+    stride: int = 1,
+    padding: Union[int, str] = 0,
+    dilation: int = 1,
+    device: device = cpu,
+) -> Tensor:
+    if isinstance(padding, str):
+        raise NotImplementedError("String-valued padding not supported.")
+
+    padding_left, padding_right = padding, padding
+
+    output_size = 1 + int(
+        (
+            (input_size + padding_left + padding_right)
+            - (kernel_size + (kernel_size - 1) * (dilation - 1))
+        )
+        / stride
+    )
+
+    pattern = zeros(
+        kernel_size, output_size, input_size, dtype=torch.bool, device=device
+    )
+
+    for o in range(output_size):
+        for k in range(kernel_size):
+            i = stride * o - padding_left + k * dilation
+            if 0 <= i < input_size:
+                pattern[k, o, i] = True
+
+    return pattern
