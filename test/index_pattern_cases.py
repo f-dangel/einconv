@@ -11,6 +11,8 @@ INDEX_PATTERN_CASES = [
     {"input_size": 11, "kernel_size": 4, "padding": 2},
     # with nontrivial large padding
     {"input_size": 11, "kernel_size": 4, "padding": 6},
+    # with string-valued padding
+    {"input_size": 11, "kernel_size": 4, "padding": "valid"},
     # with nontrivial dilation
     {"input_size": 20, "kernel_size": 3, "stride": 2},
     # mixed non-default hyperparameters

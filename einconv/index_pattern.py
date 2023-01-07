@@ -85,11 +85,14 @@ def conv_index_pattern_logical(
     dilation: int = 1,
     device: device = cpu,
 ) -> Tensor:
-    # TODO Support 'valid' padding
     # TODO Support 'same' padding
-    # TODO Check padding value if string
     if isinstance(padding, str):
-        raise NotImplementedError("String-valued padding not supported.")
+        if padding == "valid":
+            padding = 0
+        elif padding == "same":
+            raise NotImplementedError("padding='same' not supported.")
+        else:
+            raise ValueError(f"Unknown string-value for padding: '{padding}'.")
 
     padding_left, padding_right = padding, padding
 
