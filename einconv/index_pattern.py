@@ -111,8 +111,8 @@ def conv_index_pattern_logical(
             ceil((input_size + padding_left - k * dilation) / stride), output_size
         )
 
-        for o in range(o_min, o_max):
-            i = stride * o - padding_left + k * dilation
-            pattern[k, o, i] = True
+        o_idx = torch.arange(o_min, o_max, device=device, dtype=torch.long)
+        i_idx = -padding_left + k * dilation + stride * o_idx
+        pattern[k, o_idx, i_idx] = True
 
     return pattern
