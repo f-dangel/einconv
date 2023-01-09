@@ -1,10 +1,9 @@
 """Contains functionality to implement convolution as tensor contraction (einsum)."""
 
-from math import ceil
 from typing import Union
 
 import torch
-from torch import Tensor, arange, device, eye, ones_like, zeros
+from torch import Tensor, arange, device, eye, logical_and, nonzero, ones_like, zeros
 from torch.nn.functional import conv1d
 
 from einconv.utils import get_conv_output_size, get_conv_paddings
@@ -122,15 +121,12 @@ def conv_index_pattern_logical(
     )
 
     padding_left, _ = get_conv_paddings(kernel_size, stride, padding, dilation)
+    o_idx = torch.arange(output_size, device=device, dtype=torch.long)
 
     for k in range(kernel_size):
-        o_min = max(ceil((padding_left - k * dilation) / stride), 0)
-        o_max = min(
-            ceil((input_size + padding_left - k * dilation) / stride), output_size
-        )
-
-        o_idx = torch.arange(o_min, o_max, device=device, dtype=torch.long)
         i_idx = -padding_left + k * dilation + stride * o_idx
-        pattern[k, o_idx, i_idx] = True
+        in_bounds = nonzero(logical_and(i_idx >= 0, i_idx < input_size))
+
+        pattern[k, o_idx[in_bounds], i_idx[in_bounds]] = True
 
     return pattern
