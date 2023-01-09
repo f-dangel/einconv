@@ -3,8 +3,10 @@
 from typing import Union
 
 import torch
-from torch import Tensor, arange, device, eye, ones_like, zeros
+from torch import Tensor, arange, device, eye, logical_and, nonzero, ones_like, zeros
 from torch.nn.functional import conv1d
+
+from einconv.utils import get_conv_output_size, get_conv_paddings
 
 cpu = device("cpu")
 
@@ -18,6 +20,8 @@ def conv_index_pattern(
     device: device = cpu,
 ) -> Tensor:
     """Compute the 'dummy tensor' containing the index pattern of a conv. dimension.
+
+    Uses one-dimensional convolution under the hood.
 
     The dummy tensor is denoted 𝒫 in the paper (see page 3):
 
@@ -74,3 +78,55 @@ def conv_index_pattern(
     pattern = pattern.narrow(2, 1, input_size)  # remove the padding bin
 
     return pattern  # shape [kernel_size, output_size, input_size]
+
+
+def conv_index_pattern_logical(
+    input_size: int,
+    kernel_size: int,
+    stride: int = 1,
+    padding: Union[int, str] = 0,
+    dilation: int = 1,
+    device: device = cpu,
+) -> Tensor:
+    """Compute the 'dummy tensor' containing the index pattern of a conv. dimension.
+
+    Uses logical statements under the hood.
+
+    The dummy tensor is denoted 𝒫 in the paper (see page 3):
+
+    - Hayashi, K., Yamaguchi, T., Sugawara, Y., & Maeda, S. (2019). Exploring
+      unexplored tensor network decompositions for convolutional neural networks.
+      Advances in Neural Information Processing Systems (NeurIPS).
+
+    Args:
+        input_size: Number of pixels along dimension.
+        kernel_size: Kernel size along dimension.
+        stride: Stride along dimension. Default: ``1``.
+        padding: Padding along dimension. Can be an integer or a string. Allowed
+            strings are ``'same'`` and ``'valid'``. Default: ``0``.
+        dilation: Dilation along dimension. Default: ``1``.
+        device: Execution device. Default: ``'cpu'``.
+
+    Returns:
+        Boolean tensor of shape ``[input_size, output_size, kernel_size]`` representing
+        the index pattern. Its element ``[i, o, k]`` is ``True`` If element ``i`` if the
+        input element ``i`` contributes to output element ``o`` via the ``k`` the kernel
+        entry (``False`` otherwise).
+    """
+    output_size = get_conv_output_size(
+        input_size, kernel_size, stride, padding, dilation
+    )
+    pattern = zeros(
+        kernel_size, output_size, input_size, dtype=torch.bool, device=device
+    )
+
+    padding_left, _ = get_conv_paddings(kernel_size, stride, padding, dilation)
+    o_idx = torch.arange(output_size, device=device, dtype=torch.long)
+
+    for k in range(kernel_size):
+        i_idx = -padding_left + k * dilation + stride * o_idx
+        in_bounds = nonzero(logical_and(i_idx >= 0, i_idx < input_size))
+
+        pattern[k, o_idx[in_bounds], i_idx[in_bounds]] = True
+
+    return pattern
