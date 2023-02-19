@@ -88,7 +88,7 @@ def compare_attributes(obj1: Any, obj2: Any, attributes: List[str]):
         attr1 = getattr(obj1, attr)
         attr2 = getattr(obj2, attr)
         if attr1 != attr2:
-            raise ValueError(f"'{attr}' attribute does not match: {attr1} ≠ {attr2}")
+            raise ValueError(f"{attr!r} attribute does not match: {attr1} ≠ {attr2}")
 
 
 def get_conv_paddings(
@@ -122,7 +122,7 @@ def get_conv_paddings(
             padding_left = total_padding // 2
             padding_right = total_padding - padding_left
         else:
-            raise ValueError(f"Unknown string-value for padding: '{padding}'.")
+            raise ValueError(f"Unknown string-value for padding: {padding!r}.")
     else:
         padding_left, padding_right = padding, padding
 
