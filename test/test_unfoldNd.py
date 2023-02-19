@@ -1,4 +1,4 @@
-"""Contains tests for ``einconv/unfoldnd.py"""
+"""Contains tests for ``einconv/unfoldnd.py``."""
 
 from test.unfold_cases import (
     UNFOLD_PROBLEMS_1D,

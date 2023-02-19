@@ -24,7 +24,7 @@ class UnfoldNd(Module):
         dilation: Union[int, Tuple[int, ...]] = 1,
         padding: Union[int, Tuple[int, ...]] = 0,
         stride: Union[int, Tuple[int, ...]] = 1,
-    ):
+    ):  # noqa: D107
         super().__init__()
 
         self._kernel_size = kernel_size
@@ -32,7 +32,7 @@ class UnfoldNd(Module):
         self._padding = padding
         self._stride = stride
 
-    def forward(self, input: Tensor) -> Tensor:
+    def forward(self, input: Tensor) -> Tensor:  # noqa: D102
         return unfoldNd(
             input,
             self._kernel_size,
@@ -55,6 +55,9 @@ def unfoldNd(
     ``torch.nn.functional.unfold`` for a 4d input. Uses tensor networks under the hood.
 
     See docs at https://pytorch.org/docs/stable/nn.functional.html#unfold.
+
+    # noqa: DAR101
+    # noqa: DAR201
     """
     N = input.dim() - 2
     input_sizes = input.shape[2:]
