@@ -103,7 +103,7 @@ def _unfold_einsum_equation(N: int) -> str:
         ValueError: If the equation cannot be realized without exceeding the alphabet.
 
     Returns:
-        Einsum equation for N-dimensional unfold.
+        Einsum equation for N-dimensional convolution.
     """
     input_str = ""
     output_str = ""
