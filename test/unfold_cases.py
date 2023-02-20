@@ -8,7 +8,7 @@ from test.utils import make_id
 
 from torch import float64, rand
 
-UNFOLD_PROBLEMS_1D = [
+UNFOLD_1D_CASES = [
     {
         "seed": 0,
         "input_fn": lambda: rand(2, 3, 50),
@@ -46,10 +46,10 @@ UNFOLD_PROBLEMS_1D = [
         "unfold_kwargs": {"dilation": 2, "padding": 1, "stride": 2},
     },
 ]
-UNFOLD_PROBLEMS_1D_IDS = [make_id(problem) for problem in UNFOLD_PROBLEMS_1D]
+UNFOLD_1D_IDS = [make_id(problem) for problem in UNFOLD_1D_CASES]
 
 
-UNFOLD_PROBLEMS_2D = [
+UNFOLD_2D_CASES = [
     {
         "seed": 0,
         "input_fn": lambda: rand(2, 3, 50, 40),
@@ -94,10 +94,10 @@ UNFOLD_PROBLEMS_2D = [
         "id": "bug-float-64-input",
     },
 ]
-UNFOLD_PROBLEMS_2D_IDS = [make_id(problem) for problem in UNFOLD_PROBLEMS_2D]
+UNFOLD_2D_IDS = [make_id(problem) for problem in UNFOLD_2D_CASES]
 
 
-UNFOLD_PROBLEMS_3D = [
+UNFOLD_3D_CASES = [
     {
         "seed": 0,
         "input_fn": lambda: rand(2, 3, 50, 40, 30),
@@ -135,4 +135,4 @@ UNFOLD_PROBLEMS_3D = [
         "unfold_kwargs": {"dilation": 2, "padding": 1, "stride": 2},
     },
 ]
-UNFOLD_PROBLEMS_3D_IDS = [make_id(problem) for problem in UNFOLD_PROBLEMS_3D]
+UNFOLD_3D_IDS = [make_id(problem) for problem in UNFOLD_3D_CASES]

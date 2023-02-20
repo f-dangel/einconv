@@ -1,12 +1,12 @@
 """Contains tests for ``einconv/unfoldnd.py``."""
 
 from test.unfold_cases import (
-    UNFOLD_PROBLEMS_1D,
-    UNFOLD_PROBLEMS_1D_IDS,
-    UNFOLD_PROBLEMS_2D,
-    UNFOLD_PROBLEMS_2D_IDS,
-    UNFOLD_PROBLEMS_3D,
-    UNFOLD_PROBLEMS_3D_IDS,
+    UNFOLD_1D_CASES,
+    UNFOLD_1D_IDS,
+    UNFOLD_2D_CASES,
+    UNFOLD_2D_IDS,
+    UNFOLD_3D_CASES,
+    UNFOLD_3D_IDS,
 )
 from test.utils import DEVICE_IDS, DEVICES, report_nonclose
 from typing import Dict
@@ -20,8 +20,8 @@ import einconv
 
 @mark.parametrize(
     "case",
-    UNFOLD_PROBLEMS_1D + UNFOLD_PROBLEMS_2D + UNFOLD_PROBLEMS_3D,
-    ids=UNFOLD_PROBLEMS_1D_IDS + UNFOLD_PROBLEMS_2D_IDS + UNFOLD_PROBLEMS_3D_IDS,
+    UNFOLD_1D_CASES + UNFOLD_2D_CASES + UNFOLD_3D_CASES,
+    ids=UNFOLD_1D_IDS + UNFOLD_2D_IDS + UNFOLD_3D_IDS,
 )
 @mark.parametrize("device", DEVICES, ids=DEVICE_IDS)
 def test_unfoldNd(case: Dict, device: torch.device):
@@ -47,8 +47,8 @@ def test_unfoldNd(case: Dict, device: torch.device):
 
 @mark.parametrize(
     "case",
-    UNFOLD_PROBLEMS_1D + UNFOLD_PROBLEMS_2D + UNFOLD_PROBLEMS_3D,
-    ids=UNFOLD_PROBLEMS_1D_IDS + UNFOLD_PROBLEMS_2D_IDS + UNFOLD_PROBLEMS_3D_IDS,
+    UNFOLD_1D_CASES + UNFOLD_2D_CASES + UNFOLD_3D_CASES,
+    ids=UNFOLD_1D_IDS + UNFOLD_2D_IDS + UNFOLD_3D_IDS,
 )
 @mark.parametrize("device", DEVICES, ids=DEVICE_IDS)
 def test_UnfoldNd(case: Dict, device: torch.device):
