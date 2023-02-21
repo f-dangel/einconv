@@ -230,21 +230,46 @@ def einconvNd(
         Result of the convolution. Has shape ``[batch_size, out_channels, *]`` where
         ``*`` is the the spatial output dimension shape.
 
+    """
+    _conv_check_args(input, weight, bias, groups)
+
+    N = input.dim() - 2
+    equation = _conv_einsum_equation(N)
+    operands: List[Tensor] = _conv_einsum_operands(
+        input, weight, stride, padding, dilation, groups
+    )
+    output = einsum(equation, *operands)
+    output = output.flatten(start_dim=1, end_dim=2)
+
+    if bias is not None:
+        out_channels = weight.shape[0]
+        shape_before_expand = (1, out_channels) + N * (1,)
+        output += bias.reshape(*shape_before_expand).expand_as(output)
+
+    return output
+
+
+def _conv_check_args(
+    input: Tensor, weight: Tensor, bias: Union[Tensor, None], groups: int
+):
+    """Check the input arguments to ``einconvNd``.
+
+    Args:
+        See ``einconvNd``.
+
     Raises:
         ValueError: If bias has incorrect shape.
         ValueError: If weight dimension is incorrect.
         ValueError: If weight shape is invalid.
     """
     N = input.dim() - 2
-
-    (batch_size, in_channels), input_sizes = input.shape[:2], input.shape[2:]
+    in_channels = input.shape[1]
+    out_channels = weight.shape[0]
 
     if weight.dim() != N + 2:
         raise ValueError(
             f"For Conv(N={N})d, the kernel must be {N+2}d. Got {weight.dim()}d."
         )
-
-    (out_channels, _), kernel_sizes = weight.shape[:2], weight.shape[2:]
 
     if weight.shape[0] % groups != 0:
         raise ValueError(
@@ -259,43 +284,6 @@ def einconvNd(
 
     if bias is not None and (bias.dim() != 1 or bias.numel() != out_channels):
         raise ValueError(f"Bias should have shape [{out_channels}]. Got {bias.shape}.")
-
-    # convert into tuple format
-    t_stride: Tuple[int, ...] = _tuple(stride, N)
-    t_padding: Union[Tuple[int, ...], str] = (
-        padding if isinstance(padding, str) else _tuple(padding, N)
-    )
-    t_dilation: Tuple[int, ...] = _tuple(dilation, N)
-
-    index_patterns: List[Tensor] = [
-        conv_index_pattern(
-            input_sizes[n],
-            kernel_sizes[n],
-            stride=t_stride[n],
-            padding=padding if isinstance(padding, str) else t_padding[n],
-            dilation=t_dilation[n],
-            device=input.device,
-        ).to(input.dtype)
-        for n in range(N)
-    ]
-
-    equation = _conv_einsum_equation(N)
-
-    output = einsum(
-        equation,
-        input.reshape(batch_size, groups, in_channels // groups, *input_sizes),
-        *index_patterns,
-        weight.reshape(
-            groups, out_channels // groups, in_channels // groups, *kernel_sizes
-        ),
-    )
-    output = output.flatten(start_dim=1, end_dim=2)
-
-    if bias is not None:
-        shape_before_expand = (1, out_channels) + N * (1,)
-        output += bias.reshape(*shape_before_expand).expand_as(output)
-
-    return output
 
 
 def _conv_einsum_equation(N: int) -> str:
@@ -363,3 +351,57 @@ def _conv_einsum_equation(N: int) -> str:
     input_equation = ",".join([input_str] + pattern_strs + [kernel_str])
 
     return "->".join([input_equation, output_str])
+
+
+def _conv_einsum_operands(
+    input: Tensor,
+    weight: Tensor,
+    stride: Union[int, Tuple[int, ...]],
+    padding: Union[int, str, Tuple[int, ...]],
+    dilation: Union[int, Tuple[int, ...]],
+    groups: int,
+) -> List[Tensor]:
+    """Prepare the tensor contraction operands.
+
+    Args:
+        See ``einconvNd``.
+
+    Returns:
+        Tensor list containing the operands. Convention: reshaped input, followed by
+        index pattern tensors, followed by reshaped weight.
+    """
+    N = input.dim() - 2
+
+    (batch_size, in_channels), input_sizes = input.shape[:2], input.shape[2:]
+    (out_channels, _), kernel_sizes = weight.shape[:2], weight.shape[2:]
+
+    operands = [
+        input.reshape(batch_size, groups, in_channels // groups, *input_sizes),
+    ]
+
+    # convert into tuple format
+    t_stride: Tuple[int, ...] = _tuple(stride, N)
+    t_padding: Union[Tuple[int, ...], str] = (
+        padding if isinstance(padding, str) else _tuple(padding, N)
+    )
+    t_dilation: Tuple[int, ...] = _tuple(dilation, N)
+
+    operands.extend(
+        conv_index_pattern(
+            input_sizes[n],
+            kernel_sizes[n],
+            stride=t_stride[n],
+            padding=padding if isinstance(padding, str) else t_padding[n],
+            dilation=t_dilation[n],
+            device=input.device,
+        ).to(input.dtype)
+        for n in range(N)
+    )
+
+    operands.append(
+        weight.reshape(
+            groups, out_channels // groups, in_channels // groups, *kernel_sizes
+        )
+    )
+
+    return operands
