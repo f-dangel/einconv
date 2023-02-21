@@ -229,7 +229,6 @@ def einconvNd(
     Returns:
         Result of the convolution. Has shape ``[batch_size, out_channels, *]`` where
         ``*`` is the the spatial output dimension shape.
-
     """
     _conv_check_args(input, weight, bias, groups)
 
@@ -256,6 +255,7 @@ def _conv_check_args(
 
     Args:
         See ``einconvNd``.
+        # noqa: DAR101
 
     Raises:
         ValueError: If bias has incorrect shape.
@@ -297,6 +297,7 @@ def _conv_einsum_equation(N: int) -> str:
 
     Args:
         N: Convolution dimension.
+        # noqa: DAR101
 
     Raises:
         ValueError: If the equation cannot be realized without exceeding the alphabet.
