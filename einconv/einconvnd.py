@@ -297,7 +297,6 @@ def _conv_einsum_equation(N: int) -> str:
 
     Args:
         N: Convolution dimension.
-        # noqa: DAR101
 
     Raises:
         ValueError: If the equation cannot be realized without exceeding the alphabet.
@@ -366,6 +365,7 @@ def _conv_einsum_operands(
 
     Args:
         See ``einconvNd``.
+        # noqa: DAR101
 
     Returns:
         Tensor list containing the operands. Convention: reshaped input, followed by
