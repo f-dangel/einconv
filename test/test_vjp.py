@@ -78,7 +78,7 @@ def _einsum_weight_vjp(
 def test_conv_weight_vjp(
     case: Dict, device: device, dtype: Union[torch.dtype, None] = None
 ):
-    """Compare weight JVP of PyTorch convolution layers with einsum expression.
+    """Compare weight JVP of autograd with einsum expression.
 
     Args:
         case: Dictionary describing the module.
