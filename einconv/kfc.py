@@ -38,30 +38,15 @@ def kfc_factor(
         in_channels * kernel_size_numel]``.
     """
     N = input.dim() - 2
-    batch_size, input_sizes = input.shape[0], input.shape[2:]
-
-    # convert into tuple format
-    t_kernel_size: Tuple[int, ...] = _tuple(kernel_size, N)
-    t_dilation: Tuple[int, ...] = _tuple(dilation, N)
-    t_padding: Union[Tuple[int, ...], str] = _tuple(padding, N)
-    t_stride: Tuple[int, ...] = _tuple(stride, N)
-
-    index_patterns: List[Tensor] = [
-        conv_index_pattern(
-            input_sizes[n],
-            t_kernel_size[n],
-            stride=t_stride[n],
-            padding=t_padding[n],
-            dilation=t_dilation[n],
-            device=input.device,
-        ).to(input.dtype)
-        for n in range(N)
-    ]
+    batch_size = input.shape[0]
 
     equation = _kfc_factor_einsum_equation(N)
+    operands = _kfc_factor_einsum_operands(
+        input, kernel_size, stride, padding, dilation
+    )
 
     # [in_channels, *kernel_size, in_channels, *kernel_size]
-    output = einsum(equation, input, *index_patterns, *index_patterns, input)
+    output = einsum(equation, *operands)
 
     # [in_channels * kernel_size_numel, in_channels * kernel_size_numel]
     output = output.flatten(end_dim=N).flatten(start_dim=1)
@@ -139,3 +124,46 @@ def _kfc_factor_einsum_equation(N: int) -> str:
     )
 
     return "->".join([input_equation, output_str])
+
+
+def _kfc_factor_einsum_operands(
+    input: Tensor,
+    kernel_size: Union[int, Tuple[int, ...]],
+    stride: Union[int, Tuple[int, ...]],
+    padding: Union[int, str, Tuple[int, ...]],
+    dilation: Union[int, Tuple[int, ...]],
+) -> List[Tensor]:
+    """Generate einsum operands for KFC factor.
+
+    Args:
+        See ``einconvNd``.
+        # noqa: DAR101
+
+    Returns:
+        Tensor list containing the operands. Convention: Input, followed by
+        index pattern tensors, followed by index pattern tensors, followed by input.
+    """
+    N = input.dim() - 2
+    input_sizes = input.shape[2:]
+
+    # convert into tuple format
+    t_kernel_size: Tuple[int, ...] = _tuple(kernel_size, N)
+    t_dilation: Tuple[int, ...] = _tuple(dilation, N)
+    t_padding: Union[Tuple[int, ...], str] = (
+        padding if isinstance(padding, str) else _tuple(padding, N)
+    )
+    t_stride: Tuple[int, ...] = _tuple(stride, N)
+
+    index_patterns: List[Tensor] = [
+        conv_index_pattern(
+            input_sizes[n],
+            t_kernel_size[n],
+            stride=t_stride[n],
+            padding=t_padding[n],
+            dilation=t_dilation[n],
+            device=input.device,
+        ).to(input.dtype)
+        for n in range(N)
+    ]
+
+    return [input, *index_patterns, *index_patterns, input]
