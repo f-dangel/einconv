@@ -39,8 +39,8 @@ def conv_index_pattern(
         device: Execution device. Default: ``'cpu'``.
 
     Returns:
-        Boolean tensor of shape ``[input_size, output_size, kernel_size]`` representing
-        the index pattern. Its element ``[i, o, k]`` is ``True`` If element ``i`` if the
+        Boolean tensor of shape ``[kernel_size, output_size, input_size]`` representing
+        the index pattern. Its element ``[k, o, i]`` is ``True`` If element ``i`` if the
         input element ``i`` contributes to output element ``o`` via the ``k`` the kernel
         entry (``False`` otherwise).
     """
@@ -108,8 +108,8 @@ def conv_index_pattern_logical(
         device: Execution device. Default: ``'cpu'``.
 
     Returns:
-        Boolean tensor of shape ``[input_size, output_size, kernel_size]`` representing
-        the index pattern. Its element ``[i, o, k]`` is ``True`` If element ``i`` if the
+        Boolean tensor of shape ``[kernel_size, output_size, input_size]`` representing
+        the index pattern. Its element ``[k, o, i]`` is ``True`` If element ``i`` if the
         input element ``i`` contributes to output element ``o`` via the ``k`` the kernel
         entry (``False`` otherwise).
     """
