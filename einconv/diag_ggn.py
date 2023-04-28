@@ -26,8 +26,8 @@ def _conv_diag_ggn_einsum_equation(N: int) -> str:
     sqrt_ggn2_str = ""
     result_str = ""
 
-    # requires 6 + 4 * N letters
-    letters = get_letters(6 + 4 * N)
+    # requires 6 + 5 * N letters
+    letters = get_letters(6 + 5 * N)
 
     # class dimension
     class_letter = letters.pop()
