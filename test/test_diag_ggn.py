@@ -68,7 +68,7 @@ def _backpack_diag_ggn(
         GGN diagonal.
     """
     if isinstance(layer.padding, str):
-        skip("PyTorch's unfold does notupport string padding.")
+        skip("PyTorch's unfold does not support string-valued padding.")
     else:
         unfolded_inputs = unfold_input(layer, inputs)
         return extract_weight_diagonal(layer, unfolded_inputs, sqrt_ggn, sum_batch=True)
