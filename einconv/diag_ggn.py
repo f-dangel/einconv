@@ -136,7 +136,7 @@ def _conv_diag_ggn_einsum_operands(
             batch_size,
             groups,
             out_channels // groups,
-            *output_spatial_dims
+            *output_spatial_dims,
         )
     )
 
