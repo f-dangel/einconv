@@ -10,7 +10,7 @@ from torch import Tensor, einsum, empty
 from torch.nn import Conv1d, Conv2d, Conv3d, Module, Parameter, init
 
 from einconv.index_pattern import conv_index_pattern
-from einconv.utils import _tuple, sync_parameters
+from einconv.utils import _tuple, get_letters, sync_parameters
 
 
 class EinconvNd(Module):
@@ -298,9 +298,6 @@ def _conv_einsum_equation(N: int) -> str:
     Args:
         N: Convolution dimension.
 
-    Raises:
-        ValueError: If the equation cannot be realized without exceeding the alphabet.
-
     Returns:
         Einsum equation for N-dimensional convolution.
     """
@@ -310,14 +307,7 @@ def _conv_einsum_equation(N: int) -> str:
     kernel_str = ""
 
     # requires 4 + 3 * N letters
-    # einsum can deal with the 26 lowercase letters of the alphabet
-    max_letters, required_letters = 26, 4 + 3 * N
-    if required_letters > max_letters:
-        raise ValueError(
-            f"Cannot form einsum equation. Need {required_letters} letters."
-            + f" But einsum only supports {max_letters}."
-        )
-    letters = [chr(ord("a") + i) for i in range(required_letters)]
+    letters = get_letters(4 + 3 * N)
 
     # batch dimension
     batch_letter = letters.pop()

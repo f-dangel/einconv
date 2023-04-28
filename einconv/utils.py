@@ -160,3 +160,23 @@ def get_conv_output_size(
         )
         / stride
     )
+
+
+def get_letters(num_letters: int) -> List[str]:
+    """Return a list of ``num_letters`` unique letters for an einsum equation.
+
+    Args:
+        num_letters: Number of letters to return.
+
+    Returns:
+        List of ``num_letters`` unique letters.
+
+    Raises:
+        ValueError: If ``num_letters`` is larger than the maximum number of letters.
+    """
+    max_letters = 26
+    if num_letters > max_letters:
+        raise ValueError(
+            f"einsum supports {max_letters} letters. Requested {num_letters}."
+        )
+    return [chr(ord("a") + i) for i in range(num_letters)]
