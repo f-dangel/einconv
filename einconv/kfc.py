@@ -11,7 +11,7 @@ from typing import List, Tuple, Union
 from torch import Tensor, einsum
 
 from einconv.index_pattern import conv_index_pattern
-from einconv.utils import _tuple
+from einconv.utils import _tuple, get_letters
 
 
 def kfc_factor(
@@ -75,14 +75,7 @@ def _kfc_factor_einsum_equation(N: int) -> str:
     output_str = ""
 
     # requires 3 + 5 * N letters
-    # einsum can deal with the 26 lowercase letters of the alphabet
-    max_letters, required_letters = 26, 3 + 5 * N
-    if required_letters > max_letters:
-        raise ValueError(
-            f"Cannot form einsum equation. Need {required_letters} letters."
-            + f" But einsum only supports {max_letters}."
-        )
-    letters = [chr(ord("a") + i) for i in range(required_letters)]
+    letters = get_letters(3 + 5 * N)
 
     # batch dimension
     batch_letter = letters.pop()
