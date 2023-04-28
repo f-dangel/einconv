@@ -27,7 +27,7 @@ def _conv_diag_ggn_einsum_equation(N: int) -> str:
     result_str = ""
 
     # requires 6 + 5 * N letters
-    letters = get_letters(6 + 5 * N)
+    letters = get_letters(5 + 5 * N)
 
     # class dimension
     class_letter = letters.pop()
@@ -42,13 +42,12 @@ def _conv_diag_ggn_einsum_equation(N: int) -> str:
     sqrt_ggn2_str += batch_letter
 
     # group dimension
-    group1_letter = letters.pop()
-    input1_str += group1_letter
-    sqrt_ggn1_str += group1_letter
-
-    group2_letter = letters.pop()
-    input2_str += group2_letter
-    sqrt_ggn2_str += group2_letter
+    group_letter = letters.pop()
+    input1_str += group_letter
+    sqrt_ggn1_str += group_letter
+    input2_str += group_letter
+    sqrt_ggn2_str += group_letter
+    result_str += group_letter
 
     # output channel dimension
     out_channel_letter = letters.pop()
