@@ -51,7 +51,7 @@ def _einsum_diag_ggn(
         layer.dilation,
         layer.groups,
     )
-    return einsum(equation, *operands)
+    return einsum(equation, *operands).flatten(end_dim=1)
 
 
 def _backpack_diag_ggn(
