@@ -14,7 +14,7 @@ from typing import Dict, Union
 
 import torch
 from backpack.utils.conv import extract_weight_diagonal, unfold_input
-from pytest import mark
+from pytest import mark, skip
 from torch import Tensor, device, einsum, manual_seed, rand
 from torch.nn import Conv1d, Conv2d, Conv3d
 
@@ -67,8 +67,11 @@ def _backpack_diag_ggn(
     Returns:
         GGN diagonal.
     """
-    unfolded_inputs = unfold_input(layer, inputs)
-    return extract_weight_diagonal(layer, unfolded_inputs, sqrt_ggn, sum_batch=True)
+    if isinstance(layer.padding, str):
+        skip("PyTorch's unfold does notupport string padding.")
+    else:
+        unfolded_inputs = unfold_input(layer, inputs)
+        return extract_weight_diagonal(layer, unfolded_inputs, sqrt_ggn, sum_batch=True)
 
 
 @mark.parametrize("num_classes", NUM_CLASSES, ids=NUM_CLASS_IDS)
