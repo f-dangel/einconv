@@ -298,9 +298,6 @@ def _conv_einsum_equation(N: int) -> str:
     Args:
         N: Convolution dimension.
 
-    Raises:
-        ValueError: If the equation cannot be realized without exceeding the alphabet.
-
     Returns:
         Einsum equation for N-dimensional convolution.
     """
