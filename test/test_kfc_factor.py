@@ -1,4 +1,4 @@
-"""Contains tests for ``einconv/unfoldnd.py``."""
+"""Contains tests for ``einconv/kfc.py``."""
 
 from test.kfc_factor_cases import (
     KFC_FACTOR_1D_CASES,
