@@ -42,7 +42,9 @@ def kfac_reduce_factor(
     operands = _kfac_reduce_factor_einsum_operands(
         input, kernel_size, stride, padding, dilation
     )
-    output_size = Tensor([pattern.shape[1] for pattern in operands[1:-1]]).prod()
+    output_size_squared = Tensor(
+        [pattern.shape[1] for pattern in operands[1:-1]]
+    ).prod()
 
     # [in_channels, *kernel_size, in_channels, *kernel_size]
     output = einsum(equation, *operands)
@@ -50,7 +52,7 @@ def kfac_reduce_factor(
     # [in_channels * kernel_size_numel, in_channels * kernel_size_numel]
     output = output.flatten(end_dim=N).flatten(start_dim=1)
 
-    return output / (batch_size * output_size**2)
+    return output / (batch_size * output_size_squared)
 
 
 def _kfac_reduce_factor_einsum_equation(N: int) -> str:
