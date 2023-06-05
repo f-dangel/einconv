@@ -77,6 +77,15 @@ def conv_index_pattern(
     pattern.scatter_add_(2, out_idxs.long(), ones_like(pattern))
     pattern = pattern.narrow(2, 1, input_size)  # remove the padding bin
 
+    # store convolution parameters in pattern tensor
+    pattern._pattern_hyperparams = {
+        "input_size": input_size,
+        "kernel_size": kernel_size,
+        "stride": stride,
+        "padding": padding,
+        "dilation": dilation,
+    }
+
     return pattern  # shape [kernel_size, output_size, input_size]
 
 
