@@ -1,7 +1,7 @@
 """Utility functions for ``einconv``."""
 
 from math import floor
-from typing import Any, List, Tuple, Union
+from typing import Any, List, Optional, Set, Tuple, Union
 
 from torch.nn import Module
 
@@ -162,21 +162,28 @@ def get_conv_output_size(
     )
 
 
-def get_letters(num_letters: int) -> List[str]:
+def get_letters(num_letters: int, blocked: Optional[Set] = None) -> List[str]:
     """Return a list of ``num_letters`` unique letters for an einsum equation.
 
     Args:
         num_letters: Number of letters to return.
+        blocked: Set of letters that should not be used.
 
     Returns:
         List of ``num_letters`` unique letters.
 
     Raises:
-        ValueError: If ``num_letters`` is larger than the maximum number of letters.
+        ValueError: If ``num_letters`` cannot be satisfies with einsum-supported
+            letters.
     """
     max_letters = 26
-    if num_letters > max_letters:
+    letters = {chr(ord("a") + i) for i in range(max_letters)}
+    blocked = set() if blocked is None else blocked
+    non_blocked = list(letters - blocked)
+
+    if num_letters > len(non_blocked):
         raise ValueError(
             f"einsum supports {max_letters} letters. Requested {num_letters}."
+            + f" Non-blocked {len(non_blocked)}.)"
         )
-    return [chr(ord("a") + i) for i in range(num_letters)]
+    return non_blocked[:num_letters]
