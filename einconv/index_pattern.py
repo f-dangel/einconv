@@ -3,12 +3,12 @@
 from typing import Union
 
 import torch
-from torch import Tensor, arange, device, eye, logical_and, nonzero, ones_like, zeros
+from torch import Tensor, arange, eye, logical_and, nonzero, ones_like, zeros
 from torch.nn.functional import conv1d
 
 from einconv.utils import get_conv_output_size, get_conv_paddings
 
-cpu = device("cpu")
+cpu = torch.device("cpu")
 
 
 def conv_index_pattern(
@@ -17,7 +17,8 @@ def conv_index_pattern(
     stride: int = 1,
     padding: Union[int, str] = 0,
     dilation: int = 1,
-    device: device = cpu,
+    device: torch.device = cpu,
+    dtype: torch.dtype = torch.bool,
 ) -> Tensor:
     """Compute the 'dummy tensor' containing the index pattern of a conv. dimension.
 
@@ -37,6 +38,7 @@ def conv_index_pattern(
             strings are ``'same'`` and ``'valid'``. Default: ``0``.
         dilation: Dilation along dimension. Default: ``1``.
         device: Execution device. Default: ``'cpu'``.
+        dtype: Data type of the pattern tensor. Default: ``torch.bool``.
 
     Returns:
         Boolean tensor of shape ``[kernel_size, output_size, input_size]`` representing
@@ -77,6 +79,7 @@ def conv_index_pattern(
     pattern.scatter_add_(2, out_idxs.long(), ones_like(pattern))
     pattern = pattern.narrow(2, 1, input_size)  # remove the padding bin
 
+    pattern = pattern.to(dtype)
     # store convolution parameters in pattern tensor
     pattern._pattern_hyperparams = {
         "input_size": input_size,
@@ -95,7 +98,8 @@ def conv_index_pattern_logical(
     stride: int = 1,
     padding: Union[int, str] = 0,
     dilation: int = 1,
-    device: device = cpu,
+    device: torch.device = cpu,
+    dtype: torch.dtype = torch.bool,
 ) -> Tensor:
     """Compute the 'dummy tensor' containing the index pattern of a conv. dimension.
 
@@ -115,6 +119,7 @@ def conv_index_pattern_logical(
             strings are ``'same'`` and ``'valid'``. Default: ``0``.
         dilation: Dilation along dimension. Default: ``1``.
         device: Execution device. Default: ``'cpu'``.
+        dtype: Data type of the pattern tensor. Default: ``torch.bool``.
 
     Returns:
         Boolean tensor of shape ``[kernel_size, output_size, input_size]`` representing
@@ -137,5 +142,15 @@ def conv_index_pattern_logical(
         in_bounds = nonzero(logical_and(i_idx >= 0, i_idx < input_size))
 
         pattern[k, o_idx[in_bounds], i_idx[in_bounds]] = True
+
+    pattern = pattern.to(dtype)
+    # store convolution parameters in pattern tensor
+    pattern._pattern_hyperparams = {
+        "input_size": input_size,
+        "kernel_size": kernel_size,
+        "stride": stride,
+        "padding": padding,
+        "dilation": dilation,
+    }
 
     return pattern

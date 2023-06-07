@@ -3,6 +3,7 @@
 from types import LambdaType
 from typing import Dict, List
 
+import torch
 from torch import Tensor, allclose, cuda, device, isclose
 
 
@@ -85,3 +86,7 @@ def make_id(case: Dict) -> str:
             parts.append("_".join([key_str, value_str]))
 
     return "_".join(parts)
+
+
+DTYPES = [torch.bool, torch.float32, torch.int32]
+DTYPE_IDS = [f"dtype={dt}" for dt in DTYPES]
