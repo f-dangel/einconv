@@ -152,7 +152,8 @@ def _kfc_factor_einsum_operands(
             padding=t_padding[n],
             dilation=t_dilation[n],
             device=input.device,
-        ).to(input.dtype)
+            dtype=input.dtype,
+        )
         for n in range(N)
     ]
 
