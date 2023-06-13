@@ -20,6 +20,7 @@ def kfc_factor(
     dilation: Union[int, Tuple[int, ...]] = 1,
     padding: Union[int, Tuple[int, ...]] = 0,
     stride: Union[int, Tuple[int, ...]] = 1,
+    groups: int = 1,
 ) -> Tensor:
     """Compute the mean of the unfolded's input inner product.
 
@@ -32,9 +33,10 @@ def kfc_factor(
             Default: ``1``.
         padding: N-dimensional tuple or integer containing the padding. Default: ``0``.
         stride: N-dimensional tuple or integer containing the stride. Default: ``1``.
+        groups: Number of channel groups. Default: ``1``.
 
     Returns:
-        KFC factor of shape ``[in_channels * kernel_size_numel,
+        KFC factor of shape ``[groups, in_channels * kernel_size_numel,
         in_channels * kernel_size_numel]``.
     """
     N = input.dim() - 2
@@ -42,14 +44,14 @@ def kfc_factor(
 
     equation = _kfc_factor_einsum_equation(N)
     operands = _kfc_factor_einsum_operands(
-        input, kernel_size, stride, padding, dilation
+        input, kernel_size, stride, padding, dilation, groups
     )
 
-    # [in_channels, *kernel_size, in_channels, *kernel_size]
+    # [groups, in_channels, *kernel_size, in_channels, *kernel_size]
     output = einsum(equation, *operands)
 
-    # [in_channels * kernel_size_numel, in_channels * kernel_size_numel]
-    output = output.flatten(end_dim=N).flatten(start_dim=1)
+    # [groups, in_channels * kernel_size_numel, in_channels * kernel_size_numel]
+    output = output.flatten(start_dim=1, end_dim=N + 1).flatten(start_dim=2)
 
     return output / batch_size
 
@@ -71,13 +73,18 @@ def _kfc_factor_einsum_equation(N: int) -> str:
     pattern2_strs: List[str] = []
     output_str = ""
 
-    # requires 3 + 5 * N letters
-    letters = get_letters(3 + 5 * N)
+    # requires 4 + 5 * N letters
+    letters = get_letters(4 + 5 * N)
 
     # batch dimension
     batch_letter = letters.pop()
     input1_str += batch_letter
     input2_str += batch_letter
+
+    # group dimension
+    group_str = letters.pop()
+    input1_str += group_str
+    input2_str += group_str
 
     # input channel dimension for first input
     in_channel_letter = letters.pop()
@@ -122,6 +129,7 @@ def _kfc_factor_einsum_operands(
     stride: Union[int, Tuple[int, ...]],
     padding: Union[int, str, Tuple[int, ...]],
     dilation: Union[int, Tuple[int, ...]],
+    groups: int,
 ) -> List[Tensor]:
     """Generate einsum operands for KFC factor.
 
@@ -134,7 +142,7 @@ def _kfc_factor_einsum_operands(
         index pattern tensors, followed by index pattern tensors, followed by input.
     """
     N = input.dim() - 2
-    input_sizes = input.shape[2:]
+    (batch_size, in_channels), input_sizes = input.shape[:2], input.shape[2:]
 
     # convert into tuple format
     t_kernel_size: Tuple[int, ...] = _tuple(kernel_size, N)
@@ -156,5 +164,8 @@ def _kfc_factor_einsum_operands(
         )
         for n in range(N)
     ]
+    input_ungrouped = input.reshape(
+        batch_size, groups, in_channels // groups, *input_sizes
+    )
 
-    return [input, *index_patterns, *index_patterns, input]
+    return [input_ungrouped, *index_patterns, *index_patterns, input_ungrouped]

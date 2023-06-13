@@ -38,11 +38,15 @@ def test_kfc_factor(case: Dict, device: torch.device):
 
     torch.manual_seed(seed)
     inputs = input_fn().to(device)
-    batch_size = inputs.shape[0]
 
     unfolded_input = unfoldNd.unfoldNd(inputs, kernel_size, **kfc_factor_kwargs)
+    batch_size, in_channels_times_k, output_size = unfolded_input.shape
+    groups = kfc_factor_kwargs.get("groups", 1)
+    unfolded_input = unfolded_input.reshape(
+        batch_size, groups, in_channels_times_k // groups, output_size
+    )
     result_unfold = (
-        torch.einsum("nik,njk->ij", unfolded_input, unfolded_input) / batch_size
+        torch.einsum("ngik,ngjk->gij", unfolded_input, unfolded_input) / batch_size
     )
     result_einconv = einconv.kfc_factor(inputs, kernel_size, **kfc_factor_kwargs)
 
