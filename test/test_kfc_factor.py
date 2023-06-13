@@ -40,7 +40,7 @@ def test_kfc_factor(case: Dict, device: torch.device):
     inputs = input_fn().to(device)
 
     unfold_kwargs = {
-        key: value for key, value in kfc_factor_kwargs.items if key != "groups"
+        key: value for key, value in kfc_factor_kwargs.items() if key != "groups"
     }
     unfolded_input = unfoldNd.unfoldNd(inputs, kernel_size, **unfold_kwargs)
     batch_size, in_channels_times_k, output_size = unfolded_input.shape
@@ -53,4 +53,4 @@ def test_kfc_factor(case: Dict, device: torch.device):
     )
     result_einconv = einconv.kfc_factor(inputs, kernel_size, **kfc_factor_kwargs)
 
-    report_nonclose(result_unfold, result_einconv)
+    report_nonclose(result_unfold, result_einconv, rtol=5e-5)

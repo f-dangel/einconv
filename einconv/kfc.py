@@ -158,7 +158,7 @@ def _kfc_factor_einsum_operands(
             input_sizes[n],
             t_kernel_size[n],
             stride=t_stride[n],
-            padding=t_padding[n],
+            padding=t_padding if isinstance(t_padding, str) else t_padding[n],
             dilation=t_dilation[n],
             device=input.device,
             dtype=input.dtype,
