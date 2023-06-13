@@ -85,6 +85,7 @@ def _kfc_factor_einsum_equation(N: int) -> str:
     group_str = letters.pop()
     input1_str += group_str
     input2_str += group_str
+    output_str += group_str
 
     # input channel dimension for first input
     in_channel_letter = letters.pop()
