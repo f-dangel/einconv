@@ -39,7 +39,10 @@ def test_kfc_factor(case: Dict, device: torch.device):
     torch.manual_seed(seed)
     inputs = input_fn().to(device)
 
-    unfolded_input = unfoldNd.unfoldNd(inputs, kernel_size, **kfc_factor_kwargs)
+    unfold_kwargs = {
+        key: value for key, value in kfc_factor_kwargs.items if key != "groups"
+    }
+    unfolded_input = unfoldNd.unfoldNd(inputs, kernel_size, **unfold_kwargs)
     batch_size, in_channels_times_k, output_size = unfolded_input.shape
     groups = kfc_factor_kwargs.get("groups", 1)
     unfolded_input = unfolded_input.reshape(
