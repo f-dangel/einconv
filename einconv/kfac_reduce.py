@@ -20,6 +20,7 @@ def kfac_reduce_factor(
     dilation: Union[int, Tuple[int, ...]] = 1,
     padding: Union[int, Tuple[int, ...]] = 0,
     stride: Union[int, Tuple[int, ...]] = 1,
+    groups: int = 1,
 ) -> Tensor:
     """Compute the batch mean of the column-averaged unfolded's input inner product.
 
@@ -30,9 +31,10 @@ def kfac_reduce_factor(
             Default: ``1``.
         padding: N-dimensional tuple or integer containing the padding. Default: ``0``.
         stride: N-dimensional tuple or integer containing the stride. Default: ``1``.
+        groups: Number of channel groups. Default: ``1``.
 
     Returns:
-        KFAC-reduce factor of shape ``[in_channels * kernel_size_numel,
+        KFAC-reduce factor of shape ``[groups, in_channels * kernel_size_numel,
         in_channels * kernel_size_numel]``.
     """
     N = input.dim() - 2
@@ -40,17 +42,17 @@ def kfac_reduce_factor(
 
     equation = _kfac_reduce_factor_einsum_equation(N)
     operands = _kfac_reduce_factor_einsum_operands(
-        input, kernel_size, stride, padding, dilation
+        input, kernel_size, stride, padding, dilation, groups
     )
     output_size_squared = Tensor(
         [pattern.shape[1] for pattern in operands[1:-1]]
     ).prod()
 
-    # [in_channels, *kernel_size, in_channels, *kernel_size]
+    # [groups, in_channels, *kernel_size, in_channels, *kernel_size]
     output = einsum(equation, *operands)
 
-    # [in_channels * kernel_size_numel, in_channels * kernel_size_numel]
-    output = output.flatten(end_dim=N).flatten(start_dim=1)
+    # [groups, in_channels * kernel_size_numel, in_channels * kernel_size_numel]
+    output = output.flatten(start_dim=1, end_dim=N + 1).flatten(start_dim=2)
 
     return output / (batch_size * output_size_squared)
 
@@ -72,13 +74,19 @@ def _kfac_reduce_factor_einsum_equation(N: int) -> str:
     pattern2_strs: List[str] = []
     output_str = ""
 
-    # requires 3 + 6 * N letters
-    letters = get_letters(3 + 6 * N)
+    # requires 4 + 6 * N letters
+    letters = get_letters(4 + 6 * N)
 
     # batch dimension
     batch_letter = letters.pop()
     input1_str += batch_letter
     input2_str += batch_letter
+
+    # group dimension
+    group_letter = letters.pop()
+    input1_str += group_letter
+    input2_str += group_letter
+    output_str += group_letter
 
     # input channel dimension for first input
     in_channel_letter = letters.pop()
@@ -123,6 +131,7 @@ def _kfac_reduce_factor_einsum_operands(
     stride: Union[int, Tuple[int, ...]],
     padding: Union[int, str, Tuple[int, ...]],
     dilation: Union[int, Tuple[int, ...]],
+    groups: int,
 ) -> List[Tensor]:
     """Generate einsum operands for KFAC reduce factor.
 
@@ -135,7 +144,7 @@ def _kfac_reduce_factor_einsum_operands(
         index pattern tensors, followed by index pattern tensors, followed by input.
     """
     N = input.dim() - 2
-    input_sizes = input.shape[2:]
+    (batch_size, in_channels), input_sizes = input.shape[:2], input.shape[2:]
 
     # convert into tuple format
     t_kernel_size: Tuple[int, ...] = _tuple(kernel_size, N)
@@ -150,12 +159,15 @@ def _kfac_reduce_factor_einsum_operands(
             input_sizes[n],
             t_kernel_size[n],
             stride=t_stride[n],
-            padding=t_padding[n],
+            padding=t_padding if isinstance(t_padding, str) else t_padding[n],
             dilation=t_dilation[n],
             device=input.device,
             dtype=input.dtype,
         )
         for n in range(N)
     ]
+    input_ungrouped = input.reshape(
+        batch_size, groups, in_channels // groups, *input_sizes
+    )
 
-    return [input, *index_patterns, *index_patterns, input]
+    return [input_ungrouped, *index_patterns, *index_patterns, input_ungrouped]

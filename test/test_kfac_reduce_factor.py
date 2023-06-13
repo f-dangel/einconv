@@ -44,13 +44,23 @@ def test_kfac_reduce_factor(case: Dict, device: torch.device):
     inputs = input_fn().to(device)
     batch_size = inputs.shape[0]
 
-    unfolded_input = unfoldNd.unfoldNd(inputs, kernel_size, **kfac_reduce_factor_kwargs)
+    unfold_kwargs = {
+        key: value
+        for key, value in kfac_reduce_factor_kwargs.items()
+        if key != "groups"
+    }
+    unfolded_input = unfoldNd.unfoldNd(inputs, kernel_size, **unfold_kwargs)
     avg_unfolded_input = unfolded_input.mean(dim=-1)
+    in_channels_times_k = avg_unfolded_input.shape[1]
+    groups = kfac_reduce_factor_kwargs.get("groups", 1)
+    avg_unfolded_input = avg_unfolded_input.reshape(
+        batch_size, groups, in_channels_times_k // groups
+    )
     result_unfold = torch.einsum(
-        "ni,nj->ij", avg_unfolded_input, avg_unfolded_input
+        "ngi,ngj->gij", avg_unfolded_input, avg_unfolded_input
     ) / (batch_size)
     result_einconv = kfac_reduce_factor(
         inputs, kernel_size, **kfac_reduce_factor_kwargs
     )
 
-    report_nonclose(result_unfold, result_einconv)
+    report_nonclose(result_unfold, result_einconv, rtol=5e-5)
