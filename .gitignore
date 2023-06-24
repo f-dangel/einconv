@@ -2,3 +2,5 @@
 *.egg-info
 .eggs
 /.coverage
+**.DS_Store
+site

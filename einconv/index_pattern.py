@@ -41,10 +41,10 @@ def conv_index_pattern(
         dtype: Data type of the pattern tensor. Default: ``torch.bool``.
 
     Returns:
-        Boolean tensor of shape ``[kernel_size, output_size, input_size]`` representing
-        the index pattern. Its element ``[k, o, i]`` is ``True`` If element ``i`` if the
-        input element ``i`` contributes to output element ``o`` via the ``k`` the kernel
-        entry (``False`` otherwise).
+        Boolean tensor of shape ``[kernel_size, output_size, input_size]`` \
+        representing the index pattern. Its element ``[k, o, i]`` is ``True`` If \
+        element ``i`` if the input element ``i`` contributes to output element ``o`` \
+        via the ``k`` the kernel entry (``False`` otherwise).
     """
     in_idxs_dtype = torch.int32
     # in some cases, conv1d does not support int32 inputs.
