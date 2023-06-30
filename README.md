@@ -1,15 +1,8 @@
-# <img alt="Einconv:" src="./docs/logo.svg" height="90"> Convolutions Through the Lens of Tensor Networks
+# <img alt="Einconv:" src="./docs/logo.png" height="90"> Convolutions Through the Lens of Tensor Networks
 
 This package offers white-box implementations of convolutions and related
 operations in PyTorch via `einsum`. You have full control and can easily make
 modifications to try out new ideas.
-
-## Installation
-Install from PyPI via `pip`
-
-```bash
-pip install einconv
-```
 
 ### Disclaimer
 
@@ -17,6 +10,13 @@ This package has the same name as
 [this](https://github.com/pfnet-research/einconv) Github repository which
 represented the starting point for our work. Our package goes beyond it by
 providing more routines and functionality for optimizing computations.
+
+## Installation
+Install from PyPI via `pip`
+
+```sh
+pip install einconv
+```
 
 ## Quick-start
 
@@ -36,7 +36,6 @@ modules and functionals:
 |------------------------------|---------------------------|
 | `nn.Conv{1,2,3}d`            | `ConvNd`                  |
 | `nn.Unfold`                  | `UnfoldNd`                |
-|------------------------------|---------------------------|
 | `nn.functional.conv{1,2,3}d` | `convNd`                  |
 | `nn.functional.unfold`       | `unfoldNd`                |
 
@@ -50,7 +49,7 @@ shape) for the following operations:
 - Input unfolding (`im2col/unfold`) for inputs of `N`-dimensional convolution
 
 These can then be evaluated with `einsum`:
-```python
+```py
 equation, operands, final_shape = einsum_expression(...)
 result = einsum(equation, *operands).reshape(final_shape)
 ```
@@ -58,7 +57,7 @@ result = einsum(equation, *operands).reshape(final_shape)
 ### Optimizations
 
 Some operations (e.g. dense convolutions) can be optimized via symbolic simplifications:
-```python
+```py
 equation_opt, operands_opt, final_shape = simplify(equation, operands)
 # alternatively:
 # equation_opt, operands_opt, final_shape = einsum_expression(..., simplify=True)
@@ -72,7 +71,7 @@ allclose(result, result_opt) # True
 If you find the `einconv` package useful for your research, consider mentioning
 the accompanying article
 
-```bibtex
+```bib
 
 @article{dangel2023convolutions,
   title =        {Convolutions Through the Lens of Tensor Networks},

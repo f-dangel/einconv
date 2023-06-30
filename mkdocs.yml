@@ -7,9 +7,19 @@ nav:
     - API: api.md
 theme:
     name: material
+    logo: logo.png
+    features:
+        - content.code.copy
 markdown_extensions:
     - pymdownx.arithmatex: # LaTeX math
           generic: true
+    - pymdownx.highlight: # code highlighting
+          anchor_linenums: true
+          line_spans: __span
+          pygments_lang_class: true
+    - pymdownx.inlinehilite # code highlighting
+    - pymdownx.snippets # code highlighting
+    - pymdownx.superfences # code highlighting
 plugins:
     - mkdocstrings:
         default_handler: python
