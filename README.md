@@ -1,8 +1,7 @@
 # <img alt="Einconv:" src="./docs/logo.png" height="90"> Convolutions Through the Lens of Tensor Networks
 
-This package offers white-box implementations of convolutions and related
-operations in PyTorch via `einsum`. You have full control and can easily make
-modifications to try out new ideas.
+This package offers `einsum`-based implementations of convolutions and related
+operations in PyTorch.
 
 **Disclaimer:** The package name is inspired by
 [this](https://github.com/pfnet-research/einconv) Github repository which
@@ -15,10 +14,12 @@ Install from PyPI via `pip`
 pip install einconv
 ```
 
-## Minimal example
+## Example
 
-Under preparation
+Try running the [basic
+example](https://github.com/f-dangel/einconv/blob/master/docs/tutorials/basic_conv2d.py).
 
+More tutorials are [TODO here]().
 
 ## Features & Usage
 
@@ -28,18 +29,29 @@ In general, `einconv`'s goals are:
 - Support for any dimension (e.g. 5d-convolution)
 - Optimizations via symbolic simplification
 
-### Modules & Functionals
+### Modules
 
-`einconv` provides `einsum`-based implementations of the following PyTorch
-modules and functionals:
+`einconv` provides `einsum`-based implementations of the following PyTorch modules:
 
-| `torch` module    | `torch` functional           | `einconv` module | `einconv` functional |
-|-------------------|------------------------------|------------------|----------------------|
-| `nn.Conv{1,2,3}d` | `nn.functional.conv{1,2,3}d` | `ConvNd`         | `convNd`             |
-| `nn.Unfold`       | `nn.functional.unfold`       | `UnfoldNd`       | `unfoldNd`           |
+| `torch` module    | `einconv` module   |
+|-------------------|--------------------|
+| `nn.Conv{1,2,3}d` | `modules.ConvNd`   |
+| `nn.Unfold`       | `modules.UnfoldNd` |
+
+They work in exactly the same way as their PyTorch equivalents.
+
+### Functionals
+
+`einconv` provides `einsum`-based implementations of the following PyTorch functionals:
+
+| `torch` functional           | `einconv` functional   |
+|------------------------------|------------------------|
+| `nn.functional.conv{1,2,3}d` | `functionals.convNd`   |
+| `nn.functional.unfold`       | `functionals.unfoldNd` |
+
+They work in exactly the same way as their PyTorch equivalents.
 
 ### Einsum Expressions
-
 `einconv` can generate `einsum` expressions (equation, operands, and output
 shape) for the following operations:
 
@@ -49,7 +61,10 @@ shape) for the following operations:
 
 These can then be evaluated with `einsum`:
 ```py
-equation, operands, final_shape = einsum_expression(...)
+from torch import einsum
+from einconv.expressions import conv_forward
+
+equation, operands, final_shape = conv_forward.einsum_expression(...)
 result = einsum(equation, *operands).reshape(final_shape)
 ```
 
@@ -57,9 +72,12 @@ result = einsum(equation, *operands).reshape(final_shape)
 
 Some operations (e.g. dense convolutions) can be optimized via symbolic simplifications:
 ```py
+from einconv import simplify
+from torch import allclose
+
 equation_opt, operands_opt, final_shape = simplify(equation, operands)
 # alternatively:
-# equation_opt, operands_opt, final_shape = einsum_expression(..., simplify=True)
+# equation_opt, operands_opt, final_shape = conv_forward.einsum_expression(..., simplify=True)
 result_opt = einsum(equation_opt, *operands_opt).reshape(final_shape)
 
 allclose(result, result_opt) # True
@@ -81,4 +99,4 @@ the accompanying article
 ```
 ## Limitations
 
-- TODO
+Under preparation

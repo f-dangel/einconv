@@ -1,2 +1,2 @@
-:::einconv.convNd
-:::einconv.unfoldNd
+::: einconv.functionals.convNd
+::: einconv.functionals.unfoldNd

@@ -11,7 +11,7 @@ from einconv.utils import get_conv_output_size, get_conv_paddings
 cpu = torch.device("cpu")
 
 
-def conv_index_pattern(
+def index_pattern(
     input_size: int,
     kernel_size: int,
     stride: int = 1,
@@ -92,7 +92,7 @@ def conv_index_pattern(
     return pattern  # shape [kernel_size, output_size, input_size]
 
 
-def conv_index_pattern_logical(
+def index_pattern_logical(
     input_size: int,
     kernel_size: int,
     stride: int = 1,

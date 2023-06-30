@@ -13,7 +13,7 @@ nav:
         - Einsum Expressions: api/expressions.md
         - Symbolic Simplifications: api/simplifications.md
         - Miscellaneous: api/miscellaneous.md
-    - Developer documentation: develop.md
+    - Developer notes: develop.md
 theme:
     name: material
     logo: logo.png
