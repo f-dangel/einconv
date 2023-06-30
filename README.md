@@ -4,12 +4,9 @@ This package offers white-box implementations of convolutions and related
 operations in PyTorch via `einsum`. You have full control and can easily make
 modifications to try out new ideas.
 
-### Disclaimer
-
-This package has the same name as
+**Disclaimer:** The package name is inspired by
 [this](https://github.com/pfnet-research/einconv) Github repository which
-represented the starting point for our work. Our package goes beyond it by
-providing more routines and functionality for optimizing computations.
+represented the starting point for our work.
 
 ## Installation
 Install from PyPI via `pip`
@@ -18,28 +15,30 @@ Install from PyPI via `pip`
 pip install einconv
 ```
 
-## Quick-start
+## Minimal example
+
+Under preparation
+
 
 ## Features & Usage
 
 In general, `einconv`'s goals are:
+
 - Full hyper-parameter support (stride, padding, dilation, groups, etc.)
 - Support for any dimension (e.g. 5d-convolution)
 - Optimizations via symbolic simplification
 
-### High-level features
+### Modules & Functionals
 
 `einconv` provides `einsum`-based implementations of the following PyTorch
 modules and functionals:
 
-| `torch`                      | `einconv` (arbitrary `N`) |
-|------------------------------|---------------------------|
-| `nn.Conv{1,2,3}d`            | `ConvNd`                  |
-| `nn.Unfold`                  | `UnfoldNd`                |
-| `nn.functional.conv{1,2,3}d` | `convNd`                  |
-| `nn.functional.unfold`       | `unfoldNd`                |
+| `torch` module    | `torch` functional           | `einconv` module | `einconv` functional |
+|-------------------|------------------------------|------------------|----------------------|
+| `nn.Conv{1,2,3}d` | `nn.functional.conv{1,2,3}d` | `ConvNd`         | `convNd`             |
+| `nn.Unfold`       | `nn.functional.unfold`       | `UnfoldNd`       | `unfoldNd`           |
 
-### Low-level features
+### Einsum Expressions
 
 `einconv` can generate `einsum` expressions (equation, operands, and output
 shape) for the following operations:
@@ -54,7 +53,7 @@ equation, operands, final_shape = einsum_expression(...)
 result = einsum(equation, *operands).reshape(final_shape)
 ```
 
-### Optimizations
+### Symbolic Simplification
 
 Some operations (e.g. dense convolutions) can be optimized via symbolic simplifications:
 ```py
