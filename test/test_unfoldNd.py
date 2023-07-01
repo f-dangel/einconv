@@ -15,7 +15,7 @@ import torch
 import unfoldNd
 from pytest import mark
 
-import einconv
+from einconv import functionals, modules
 
 
 @mark.parametrize(
@@ -40,7 +40,7 @@ def test_unfoldNd(case: Dict, device: torch.device):
     inputs = input_fn().to(device)
 
     result_unfold = unfoldNd.unfoldNd(inputs, kernel_size, **unfold_kwargs)
-    result_einconv = einconv.unfoldNd(inputs, kernel_size, **unfold_kwargs)
+    result_einconv = functionals.unfoldNd(inputs, kernel_size, **unfold_kwargs)
 
     report_nonclose(result_unfold, result_einconv)
 
@@ -67,6 +67,6 @@ def test_UnfoldNd(case: Dict, device: torch.device):
     inputs = input_fn().to(device)
 
     result_unfold = unfoldNd.UnfoldNd(kernel_size, **unfold_kwargs).to(device)(inputs)
-    result_einconv = einconv.UnfoldNd(kernel_size, **unfold_kwargs).to(device)(inputs)
+    result_einconv = modules.UnfoldNd(kernel_size, **unfold_kwargs).to(device)(inputs)
 
     report_nonclose(result_unfold, result_einconv)
