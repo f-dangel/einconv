@@ -1,4 +1,4 @@
-"""Contains test cases for ``einconv``'s ``im2col`` implementation.
+"""Test cases for the unfold module.
 
 The test cases were modified from the ``unfoldNd`` package's tests at
 https://github.com/f-dangel/unfoldNd/blob/fbee3a4b1d51e4c7c9969745f8bd08ffdb9300f1/test/unfold_settings.py.
