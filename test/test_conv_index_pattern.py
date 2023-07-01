@@ -7,13 +7,14 @@ from typing import Dict
 from pytest import mark
 from torch import device, dtype
 
-from einconv.index_pattern import conv_index_pattern, conv_index_pattern_logical
+from einconv import index_pattern
+from einconv.conv_index_pattern import index_pattern_logical
 
 
 @mark.parametrize("dtype", DTYPES, ids=DTYPE_IDS)
 @mark.parametrize("device", DEVICES, ids=DEVICE_IDS)
 @mark.parametrize("case", INDEX_PATTERN_CASES, ids=INDEX_PATTERN_IDS)
-def test_conv_index_pattern(case: Dict, device: device, dtype: dtype):
+def test_index_pattern(case: Dict, device: device, dtype: dtype):
     """Compare index pattern computations (convolution vs. logical).
 
     Args:
@@ -21,8 +22,8 @@ def test_conv_index_pattern(case: Dict, device: device, dtype: dtype):
         device: Device to carry out the computation.
         dtype: Data type of the pattern tensor.
     """
-    pattern_conv = conv_index_pattern(**case, device=device, dtype=dtype)
-    pattern_logical = conv_index_pattern_logical(**case, device=device, dtype=dtype)
+    pattern_conv = index_pattern(**case, device=device, dtype=dtype)
+    pattern_logical = index_pattern_logical(**case, device=device, dtype=dtype)
 
     for p in [pattern_conv, pattern_logical]:
         assert p.dtype == dtype
