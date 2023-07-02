@@ -1,4 +1,4 @@
-"""Contains test cases for ``einconv``'s module implementation of convolution."""
+"""Test cases for convolution module."""
 
 from test.utils import make_id
 from typing import Dict, Union
@@ -7,9 +7,9 @@ import torch
 from torch import rand
 from torch.nn import Conv1d, Conv2d, Conv3d
 
-from einconv.einconvnd import EinconvNd
+from einconv.modules import ConvNd
 
-CONV_1D_MODULE_CASES = [
+CONV_1D_CASES = [
     # no kwargs except for bias disabled
     {
         "seed": 0,
@@ -71,10 +71,10 @@ CONV_1D_MODULE_CASES = [
     },
 ]
 
-CONV_1D_MODULE_IDS = [make_id(case) for case in CONV_1D_MODULE_CASES]
+CONV_1D_IDS = [make_id(case) for case in CONV_1D_CASES]
 
 
-CONV_2D_MODULE_CASES = [
+CONV_2D_CASES = [
     # no kwargs except for bias disabled
     {
         "seed": 0,
@@ -135,9 +135,9 @@ CONV_2D_MODULE_CASES = [
         },
     },
 ]
-CONV_2D_MODULE_IDS = [make_id(case) for case in CONV_2D_MODULE_CASES]
+CONV_2D_IDS = [make_id(case) for case in CONV_2D_CASES]
 
-CONV_3D_MODULE_CASES = [
+CONV_3D_CASES = [
     # no kwargs except for bias disabled
     {
         "seed": 0,
@@ -198,9 +198,9 @@ CONV_3D_MODULE_CASES = [
         },
     },
 ]
-CONV_3D_MODULE_IDS = [make_id(case) for case in CONV_3D_MODULE_CASES]
+CONV_3D_IDS = [make_id(case) for case in CONV_3D_CASES]
 
-CONV_4D_MODULE_CASES = [
+CONV_4D_CASES = [
     # no kwargs (bias enabled)
     {
         "seed": 0,
@@ -256,9 +256,9 @@ CONV_4D_MODULE_CASES = [
         },
     },
 ]
-CONV_4D_MODULE_IDS = [make_id(case) for case in CONV_4D_MODULE_CASES]
+CONV_4D_IDS = [make_id(case) for case in CONV_4D_CASES]
 
-CONV_5D_MODULE_CASES = [
+CONV_5D_CASES = [
     # no kwargs (bias enabled)
     {
         "seed": 0,
@@ -307,9 +307,9 @@ CONV_5D_MODULE_CASES = [
         },
     },
 ]
-CONV_5D_MODULE_IDS = [make_id(case) for case in CONV_5D_MODULE_CASES]
+CONV_5D_IDS = [make_id(case) for case in CONV_5D_CASES]
 
-CONV_6D_MODULE_CASES = [
+CONV_6D_CASES = [
     # no kwargs (bias enabled)
     {
         "seed": 0,
@@ -339,7 +339,7 @@ CONV_6D_MODULE_CASES = [
         },
     },
 ]
-CONV_6D_MODULE_IDS = [make_id(case) for case in CONV_6D_MODULE_CASES]
+CONV_6D_IDS = [make_id(case) for case in CONV_6D_CASES]
 
 
 def conv_module_from_case(
@@ -367,9 +367,9 @@ def conv_module_from_case(
     )
 
 
-def einconv_module_from_case(
+def convNd_module_from_case(
     N: int, case: Dict, device: torch.device, dtype: Union[torch.dtype, None] = None
-) -> EinconvNd:
+) -> ConvNd:
     """Create einconv convolution module from a case.
 
     Args:
@@ -381,7 +381,7 @@ def einconv_module_from_case(
     Returns:
         einconv convolution module.
     """
-    return EinconvNd(
+    return ConvNd(
         N,
         case["in_channels"],
         case["out_channels"],

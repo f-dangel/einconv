@@ -1,6 +1,6 @@
 """Tests for ``einconv/index_pattern``."""
 
-from test.index_pattern_cases import INDEX_PATTERN_CASES, INDEX_PATTERN_IDS
+from test.conv_index_pattern_cases import INDEX_PATTERN_CASES, INDEX_PATTERN_IDS
 from test.utils import DEVICE_IDS, DEVICES, DTYPE_IDS, DTYPES, report_nonclose
 from typing import Dict
 

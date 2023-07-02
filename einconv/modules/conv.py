@@ -147,11 +147,11 @@ class ConvNd(Module):
                 bound = 1 / sqrt(fan_in)
                 init.uniform_(self.bias, -bound, bound)
 
-    def forward(self, input: Tensor) -> Tensor:
+    def forward(self, x: Tensor) -> Tensor:
         """Perform convolution on the input.
 
         Args:
-            input: Convolution input. Has shape
+            x: Convolution input. Has shape
                 ``[batch_size, in_channels, *spatial_in_dims]`` where
                 ``len(spatial_in_dims)==N``.
 
@@ -161,7 +161,7 @@ class ConvNd(Module):
                 ``len(spatial_out_dims)==N``.
         """
         return convNd(
-            input,
+            x,
             self.weight,
             bias=self.bias,
             stride=self.stride,

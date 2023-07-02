@@ -6,7 +6,7 @@ import jax
 import numpy
 import torch
 
-from einconv.einconvnd import EinconvNd
+from einconv.modules import ConvNd
 from einconv.utils import _tuple
 
 
@@ -85,7 +85,7 @@ def jax_convNd(
     return output
 
 
-def to_ConvNd_jax(einconv_module: EinconvNd) -> Callable[[torch.Tensor], torch.Tensor]:
+def to_ConvNd_jax(einconv_module: ConvNd) -> Callable[[torch.Tensor], torch.Tensor]:
     """Create JAX convolution 'layer' (callable) for high-dimensional convolutions.
 
     Args:

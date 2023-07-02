@@ -1,10 +1,10 @@
-"""Contains test cases for ``einconv``'s functional implementation of convolution."""
+"""Test cases for functional of convolution."""
 
 from test.utils import make_id
 
 from torch import rand
 
-CONV_1D_FUNCTIONAL_CASES = [
+CONV_1D_CASES = [
     # no kwargs
     {
         "seed": 0,
@@ -65,9 +65,9 @@ CONV_1D_FUNCTIONAL_CASES = [
         "conv_kwargs": {"padding": "same"},
     },
 ]
-CONV_1D_FUNCTIONAL_IDS = [make_id(case) for case in CONV_1D_FUNCTIONAL_CASES]
+CONV_1D_IDS = [make_id(case) for case in CONV_1D_CASES]
 
-CONV_2D_FUNCTIONAL_CASES = [
+CONV_2D_CASES = [
     # no kwargs
     {
         "seed": 0,
@@ -128,9 +128,9 @@ CONV_2D_FUNCTIONAL_CASES = [
         "conv_kwargs": {"padding": "same", "dilation": (1, 2)},
     },
 ]
-CONV_2D_FUNCTIONAL_IDS = [make_id(case) for case in CONV_2D_FUNCTIONAL_CASES]
+CONV_2D_IDS = [make_id(case) for case in CONV_2D_CASES]
 
-CONV_3D_FUNCTIONAL_CASES = [
+CONV_3D_CASES = [
     # no kwargs
     {
         "seed": 0,
@@ -195,9 +195,9 @@ CONV_3D_FUNCTIONAL_CASES = [
         "conv_kwargs": {"padding": "same", "dilation": (1, 2, 2)},
     },
 ]
-CONV_3D_FUNCTIONAL_IDS = [make_id(case) for case in CONV_3D_FUNCTIONAL_CASES]
+CONV_3D_IDS = [make_id(case) for case in CONV_3D_CASES]
 
-CONV_4D_FUNCTIONAL_CASES = [
+CONV_4D_CASES = [
     # no kwargs, non-trivial bias
     {
         "seed": 0,
@@ -231,4 +231,4 @@ CONV_4D_FUNCTIONAL_CASES = [
         "conv_kwargs": {"padding": "same", "dilation": (2, 2, 2, 1), "groups": 2},
     },
 ]
-CONV_4D_FUNCTIONAL_IDS = [make_id(case) for case in CONV_4D_FUNCTIONAL_CASES]
+CONV_4D_IDS = [make_id(case) for case in CONV_4D_CASES]

@@ -29,7 +29,7 @@ def _operands_and_shape(
     stride: Optional[Union[int, Tuple[int, ...]]] = 1,
 ) -> Tuple[List[Tensor], Tuple[int]]:
     N = x.dim() - 2
-    batch_size, in_channels, input_sizes = x.shape[0], x.shape[1], x.shape[2:]
+    (batch_size, in_channels), input_sizes = x.shape[:2], x.shape[2:]
 
     # convert into tuple format
     t_kernel_size: Tuple[int, ...] = _tuple(kernel_size, N)
