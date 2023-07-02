@@ -163,6 +163,7 @@ def _equation(N: int) -> str:
         kernel_letter = letters.pop()
         output_letter = letters.pop()
 
+        x_str += input_letter
         v_str += output_letter
         output_str += kernel_letter
         pattern_strs.append(kernel_letter + output_letter + input_letter)
