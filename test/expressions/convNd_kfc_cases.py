@@ -1,10 +1,10 @@
-"""Test cases for einsum expression of input-based KFAC-reduce factor of convolution."""
+"""Test cases for einsum expression of input-based KFC factor for convolution."""
 
 from test.utils import make_id
 
 from torch import rand
 
-KFAC_REDUCE_1D_CASES = [
+KFC_1D_CASES = [
     # no kwargs
     {
         "seed": 0,
@@ -56,9 +56,9 @@ KFAC_REDUCE_1D_CASES = [
         "kwargs": {"padding": "same"},
     },
 ]
-KFAC_REDUCE_1D_IDS = [make_id(case) for case in KFAC_REDUCE_1D_CASES]
+KFC_1D_IDS = [make_id(case) for case in KFC_1D_CASES]
 
-KFAC_REDUCE_2D_CASES = [
+KFC_2D_CASES = [
     # no kwargs
     {
         "seed": 0,
@@ -110,9 +110,9 @@ KFAC_REDUCE_2D_CASES = [
         "kwargs": {"padding": "same", "dilation": (1, 2)},
     },
 ]
-KFAC_REDUCE_2D_IDS = [make_id(case) for case in KFAC_REDUCE_2D_CASES]
+KFC_2D_IDS = [make_id(case) for case in KFC_2D_CASES]
 
-KFAC_REDUCE_3D_CASES = [
+KFC_3D_CASES = [
     # no kwargs
     {
         "seed": 0,
@@ -164,4 +164,4 @@ KFAC_REDUCE_3D_CASES = [
         "kwargs": {"padding": "same", "dilation": (1, 2, 2)},
     },
 ]
-KFAC_REDUCE_3D_IDS = [make_id(case) for case in KFAC_REDUCE_3D_CASES]
+KFC_3D_IDS = [make_id(case) for case in KFC_3D_CASES]

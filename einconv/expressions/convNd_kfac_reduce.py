@@ -141,7 +141,7 @@ def _equation(N: int) -> str:
     scale_str = letters.pop()
 
     input_equation = ",".join(
-        [x1_str] + pattern1_strs + pattern2_strs + [x2_str] + [scale_str]
+        [x1_str] + pattern1_strs + pattern2_strs + [x2_str, scale_str]
     )
 
     return "->".join([input_equation, output_str])
