@@ -11,9 +11,9 @@ from einconv.utils import _tuple, get_letters
 
 
 def einsum_expression(
-    x: Tensor,
     weight: Union[Tensor, Parameter],
     v: Tensor,
+    input_sizes: Union[int, Tuple[int, ...]],
     dilation: Union[int, Tuple[int, ...]] = 1,
     padding: Union[int, Tuple[int, ...]] = 0,
     stride: Union[int, Tuple[int, ...]] = 1,
@@ -21,19 +21,12 @@ def einsum_expression(
 ) -> Tuple[str, List[Union[Tensor, Parameter]], Tuple[int, ...]]:
     """Generate einsum expression of a convolution's input VJP.
 
-    Args:
-        simplify: Whether to simplify the expression. Default: ``False``.
-
     Returns:
         Einsum equation,
         Einsum operands,
         Output shape.
-
-    Raises:
-        NotImplementedError
     """
-    N = x.dim() - 2
-    input_sizes = x.shape[2:]
+    N = weight.dim() - 2
     equation = _equation(N)
     operands, shape = _operands_and_shape(
         weight,
@@ -102,11 +95,11 @@ def _equation(N: int) -> str:
 def _operands_and_shape(
     weight: Union[Tensor, Parameter],
     v: Tensor,
-    input_sizes: Tuple[int, ...],
-    stride: Union[int, Tuple[int, ...]],
-    padding: Union[int, str, Tuple[int, ...]],
-    dilation: Union[int, Tuple[int, ...]],
-    groups: int,
+    input_sizes: Union[int, Tuple[int, ...]],
+    stride: Union[int, Tuple[int, ...]] = 1,
+    padding: Union[int, str, Tuple[int, ...]] = 0,
+    dilation: Union[int, Tuple[int, ...]] = 1,
+    groups: int = 1,
 ) -> Tuple[List[Union[Tensor, Parameter]], Tuple[int, ...]]:
     """Prepare the tensor contraction operands for the VJP.
 
@@ -120,26 +113,29 @@ def _operands_and_shape(
     """
     N = weight.dim() - 2
     batch_size = v.shape[0]
-    in_channels, kernel_size = weight.shape[1], weight.shape[2:]
+    group_in_channels, kernel_size = weight.shape[1], weight.shape[2:]
 
     # convert into tuple format
+    t_input_sizes: Tuple[int, ...] = _tuple(input_sizes, N)
     t_dilation: Tuple[int, ...] = _tuple(dilation, N)
-    t_padding: Union[Tuple[int, ...], str] = _tuple(padding, N)
+    t_padding: Union[Tuple[int, ...], str] = (
+        padding if isinstance(padding, str) else _tuple(padding, N)
+    )
     t_stride: Tuple[int, ...] = _tuple(stride, N)
 
     patterns: List[Tensor] = [
         index_pattern(
-            input_sizes[n],
+            t_input_sizes[n],
             kernel_size[n],
             stride=t_stride[n],
-            padding=t_padding[n],
+            padding=t_padding if isinstance(t_padding, str) else t_padding[n],
             dilation=t_dilation[n],
             device=weight.device,
             dtype=weight.dtype,
         )
         for n in range(N)
     ]
-    output_shape = (batch_size, in_channels, *input_sizes)
+    output_shape = (batch_size, groups * group_in_channels, *t_input_sizes)
 
     v_ungrouped = rearrange(v, "n (g c_out) ... -> n g c_out ...", g=groups)
     weight_ungrouped = rearrange(weight, "(g c_out) ... -> g c_out ...", g=groups)

@@ -58,9 +58,9 @@ def _operands_and_shape(
         Tensor list containing the operands. Convention: reshaped input, followed by
         index pattern tensors, followed by reshaped weight.
     """
-    N = input.dim() - 2
+    N = x.dim() - 2
 
-    batch_size, input_sizes = input.shape[0], input.shape[2:]
+    batch_size, input_sizes = x.shape[0], x.shape[2:]
     (out_channels, _), kernel_sizes = weight.shape[:2], weight.shape[2:]
 
     # convert into tuple format
