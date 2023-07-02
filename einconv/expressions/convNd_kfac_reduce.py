@@ -1,9 +1,9 @@
-"""Implementation of the input-based factor of K-FAC reduce for convolutions.
+"""Input-based factor of the K-FAC reduce approximation for convolutions.
 
-Details see:
+KFAC-reduce was introduced by:
 
 - Eschenhagen, R. (2022). Kronecker-factored approximate curvature for linear
-  weight-sharing layers.
+  weight-sharing layers, Master thesis.
 """
 
 from typing import List, Tuple, Union
@@ -23,6 +23,29 @@ def einsum_expression(
     dilation: Union[int, Tuple[int, ...]] = 1,
     groups: int = 1,
 ) -> Tuple[str, List[Tensor], Tuple[int, ...]]:
+    """Generate einsum expression of input-based KFAC-reduce factor for convolution.
+
+    Args:
+        x: Convolution input. Has shape ``[batch_size, in_channels, *input_sizes]``
+            where ``len(input_sizes) == N``.
+        kernel_size: Kernel dimensions. Can be a single integer (shared along all
+            spatial dimensions), or an ``N``-tuple of integers.
+        stride: Stride of the convolution. Can be a single integer (shared along all
+            spatial dimensions), or an ``N``-tuple of integers. Default: ``1``.
+        padding: Padding of the convolution. Can be a single integer (shared along
+            all spatial dimensions), an ``N``-tuple of integers, or a string.
+            Default: ``0``. Allowed strings are ``'same'`` and ``'valid'``.
+        dilation: Dilation of the convolution. Can be a single integer (shared along
+            all spatial dimensions), or an ``N``-tuple of integers. Default: ``1``.
+        groups: In how many groups to split the input channels. Default: ``1``.
+
+    Returns:
+        Einsum equation
+        Einsum operands in order un-grouped input, patterns, un-grouped input, \
+        patterns, normalization scaling
+        Output shape: ``[groups, in_channels //groups * tot_kernel_sizes,\
+        in_channels //groups * tot_kernel_sizes]``
+    """
     N = x.dim() - 2
     equation = _equation(N)
     operands, shape = _operands_and_shape(
@@ -39,10 +62,30 @@ def _operands_and_shape(
     dilation: Union[int, Tuple[int, ...]] = 1,
     groups: int = 1,
 ) -> Tuple[List[Tensor], Tuple[int, ...]]:
-    N = x.dim() - 2
-    (batch_size, in_channels), input_sizes = x.shape[:2], x.shape[2:]
+    """Generate einsum operands for KFAC-reduce factor.
 
+    Args:
+        x: Convolution input. Has shape ``[batch_size, in_channels, *input_sizes]``
+            where ``len(input_sizes) == N``.
+        kernel_size: Kernel dimensions. Can be a single integer (shared along all
+            spatial dimensions), or an ``N``-tuple of integers.
+        stride: Stride of the convolution. Can be a single integer (shared along all
+            spatial dimensions), or an ``N``-tuple of integers. Default: ``1``.
+        padding: Padding of the convolution. Can be a single integer (shared along
+            all spatial dimensions), an ``N``-tuple of integers, or a string.
+            Default: ``0``. Allowed strings are ``'same'`` and ``'valid'``.
+        dilation: Dilation of the convolution. Can be a single integer (shared along
+            all spatial dimensions), or an ``N``-tuple of integers. Default: ``1``.
+        groups: In how many groups to split the input channels. Default: ``1``.
+
+    Returns:
+        Tensor list containing the operands. Convention: Un-grouped input, patterns, \
+        un-grouped input, patterns, normalization scaling.
+        Output shape
+    """
     # convert into tuple format
+    N = x.dim() - 2
+    input_sizes = x.shape[2:]
     t_kernel_size: Tuple[int, ...] = _tuple(kernel_size, N)
     t_dilation: Tuple[int, ...] = _tuple(dilation, N)
     t_padding: Union[Tuple[int, ...], str] = (
@@ -63,18 +106,20 @@ def _operands_and_shape(
         for n in range(N)
     ]
     x_ungrouped = rearrange(x, "n (g c_in) ... -> n g c_in ...", g=groups)
-
     output_tot_size = Tensor([p.shape[1] for p in patterns]).int().prod()
-    kernel_tot_size = Tensor(t_kernel_size).int().prod()
+    batch_size = x.shape[0]
     scale = Tensor([1.0 / (batch_size * output_tot_size**2)]).to(x.device).to(x.dtype)
+    operands = [x_ungrouped, *patterns, *patterns, x_ungrouped, scale]
 
-    output_shape = (
+    kernel_tot_size = int(Tensor(t_kernel_size).int().prod())
+    in_channels = x.shape[1]
+    shape = (
         groups,
         in_channels // groups * kernel_tot_size,
         in_channels // groups * kernel_tot_size,
     )
 
-    return [x_ungrouped, *patterns, *patterns, x_ungrouped, scale], output_shape
+    return operands, shape
 
 
 def _equation(N: int) -> str:

@@ -12,7 +12,7 @@ def einsum_expression(
     stride: Union[int, Tuple[int, ...]] = 1,
     padding: Union[str, int, Tuple[int, ...]] = 0,
     dilation: Union[int, Tuple[int, ...]] = 1,
-):
+) -> Tuple[str, Tuple[Tensor], Tuple[int, ...]]:
     """Generate einsum expression to unfold the input of a convolution.
 
     Args:

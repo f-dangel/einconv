@@ -79,8 +79,9 @@ def _operands_and_shape(
         groups: In how many groups to split the input channels. Default: ``1``.
 
     Returns:
-        Tensor list containing the operands. Convention: Input, followed by
-        index pattern tensors, followed by index pattern tensors, followed by x.
+        Tensor list containing the operands. Convention: Un-grouped input, patterns, \
+        un-grouped input, patterns, normalization scaling.
+        Output shape
     """
     # convert into tuple format
     N = x.dim() - 2
