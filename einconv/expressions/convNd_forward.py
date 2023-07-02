@@ -17,20 +17,28 @@ def einsum_expression(
     padding: Union[int, str, Tuple[int, ...]] = 0,
     dilation: Union[int, Tuple[int, ...]] = 1,
     groups: int = 1,
-    simplify: Optional[bool] = False,
-) -> Tuple[str, Tuple[Tensor], Tuple[int]]:
+) -> Tuple[str, List[Union[Tensor, Parameter]], Tuple[int, ...]]:
     """Generate einsum expression of a convolution's forward pass.
 
     Args:
-        simplify: Whether to simplify the expression. Default: ``False``.
+        x: Convolution input. Has shape ``[batch_size, in_channels, *input_sizes]``
+            where ``len(input_sizes) == N``.
+        weight: Kernel of the convolution. Has shape ``[out_channels,
+            in_channels / groups, *kernel_size]`` where ``kernel_size`` is an
+            ``N``-tuple of kernel dimensions.
+        stride: Stride of the convolution. Can be a single integer (shared along all
+            spatial dimensions), or an ``N``-tuple of integers. Default: ``1``.
+        padding: Padding of the convolution. Can be a single integer (shared along
+            all spatial dimensions), an ``N``-tuple of integers, or a string.
+            Default: ``0``. Allowed strings are ``'same'`` and ``'valid'``.
+        dilation: Dilation of the convolution. Can be a single integer (shared along
+            all spatial dimensions), or an ``N``-tuple of integers. Default: ``1``.
+        groups: In how many groups to split the input channels. Default: ``1``.
 
     Returns:
         Einsum equation
-        Einsum operands
+        Einsum operands in order un-grouped input, patterns, un-grouped weight
         Output shape
-
-    Raises:
-        NotImplementedError
     """
     N = x.dim() - 2
     equation = _equation(N)
@@ -48,18 +56,18 @@ def _operands_and_shape(
     dilation: Union[int, Tuple[int, ...]] = 1,
     groups: int = 1,
 ) -> Tuple[List[Union[Tensor, Parameter]], Tuple[int, ...]]:
-    """Prepare the tensor contraction operands.
+    """Prepare operands for contraction with einsum.
 
     Returns:
-        Tensor list containing the operands. Convention: reshaped input, followed by
-        index pattern tensors, followed by reshaped weight.
+        Tensor list containing the operands in order un-grouped input, index patterns, \
+        un-grouped weight.
+        Output shape.
     """
-    N = x.dim() - 2
-
-    batch_size, input_sizes = x.shape[0], x.shape[2:]
-    (out_channels, _), kernel_sizes = weight.shape[:2], weight.shape[2:]
+    input_size = tuple(x.shape[2:])
+    kernel_size = tuple(weight.shape[2:])
 
     # convert into tuple format
+    N = x.dim() - 2
     t_stride: Tuple[int, ...] = _tuple(stride, N)
     t_padding: Union[Tuple[int, ...], str] = (
         padding if isinstance(padding, str) else _tuple(padding, N)
@@ -68,8 +76,8 @@ def _operands_and_shape(
 
     patterns = [
         index_pattern(
-            input_sizes[n],
-            kernel_sizes[n],
+            input_size[n],
+            kernel_size[n],
             stride=t_stride[n],
             padding=padding if isinstance(padding, str) else t_padding[n],
             dilation=t_dilation[n],
@@ -78,29 +86,27 @@ def _operands_and_shape(
         )
         for n in range(N)
     ]
-    output_sizes = [p.shape[1] for p in patterns]
-    output_shape = (batch_size, out_channels, *output_sizes)
-
     x_ungrouped = rearrange(x, "n (g c_in) ... -> n g c_in ...", g=groups)
     weight_ungrouped = rearrange(weight, "(g c_out) ... -> g c_out ...", g=groups)
+    operands = [x_ungrouped] + patterns + [weight_ungrouped]
 
-    return [x_ungrouped] + patterns + [weight_ungrouped], output_shape
+    output_sizes = [p.shape[1] for p in patterns]
+    batch_size = x.shape[0]
+    out_channels = weight.shape[0]
+    output_shape = (batch_size, out_channels, *output_sizes)
+
+    return operands, output_shape
 
 
 def _equation(N: int) -> str:
     """Generate einsum equation for convolution.
 
-    The arguments are ``input, *index_patterns, weight -> output``.
-
-    See https://arxiv.org/pdf/1908.04471.pdf, figure 2a for a visualization of the 3d
-    case (neglecting the groups). The Nd case follows identically, and groups can be
-    supported by a separate axis in the input, weight, and output.
-
     Args:
         N: Convolution dimension.
 
     Returns:
-        Einsum equation for N-dimensional convolution.
+        Einsum equation for N-dimensional convolution. Operand order is un-grouped \
+        input, patterns, un-grouped weight.
     """
     input_str = ""
     output_str = ""
