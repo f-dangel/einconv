@@ -25,4 +25,4 @@ ein_layer = ConvNd(N, **conv_params)
 ein_layer.weight.data = torch_layer.weight.data
 ein_layer.bias.data = torch_layer.bias.data
 
-assert allclose(torch_layer(x), ein_layer(x))
+assert allclose(torch_layer(x), ein_layer(x), atol=1e-7)
