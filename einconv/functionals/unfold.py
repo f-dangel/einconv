@@ -13,7 +13,7 @@ def unfoldNd(
     padding: Union[int, Tuple[int, ...], str] = 0,
     stride: Union[int, Tuple[int, ...]] = 1,
 ) -> Tensor:
-    """PyTorch functional for N-dimensional input unfolding that uses einsum.
+    """Torch functional for N-dimensional input unfolding that uses einsum.
 
     Extracts sliding local blocks from a batched input tensor (``im2col``).
 
