@@ -25,7 +25,7 @@ from einconv.expressions import convNd_input_vjp
     INPUT_VJP_1D_CASES + INPUT_VJP_2D_CASES + INPUT_VJP_3D_CASES,
     ids=INPUT_VJP_1D_IDS + INPUT_VJP_2D_IDS + INPUT_VJP_3D_IDS,
 )
-def test_conv_input_vjp(case: Dict, device: device):
+def test_einsum_expression(case: Dict, device: device):
     """Compare input JVP of autograd with einsum expression.
 
     Args:
