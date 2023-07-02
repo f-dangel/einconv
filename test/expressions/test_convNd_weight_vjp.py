@@ -1,7 +1,5 @@
 """Test einsum expression for weight VJP of N-dimensional convolution."""
 
-"""Tests for einconv/vjp``."""
-
 from test.expressions.convNd_weight_vjp_cases import (
     WEIGHT_VJP_1D_CASES,
     WEIGHT_VJP_1D_IDS,
