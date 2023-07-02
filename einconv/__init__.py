@@ -1,10 +1,9 @@
-"""einconv library."""
+"""Einsum implementations of convolutions and related operations."""
 
-from einconv.kfc import kfc_factor
-from einconv.unfoldnd import UnfoldNd, unfoldNd
+from einconv.conv_index_pattern import index_pattern
+from einconv.simplifications import simplify
 
 __all__ = [
-    "unfoldNd",
-    "UnfoldNd",
-    "kfc_factor",
+    "index_pattern",
+    "simplify",
 ]
