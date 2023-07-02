@@ -1,3 +1,5 @@
+"""Generates einsum expression of the weight VJP of a convolution."""
+
 from typing import List, Tuple, Union
 
 from einops import rearrange
@@ -18,9 +20,26 @@ def einsum_expression(
 ) -> Tuple[str, List[Tensor], Tuple[int, ...]]:
     """Generate einsum expression of a convolution's weight VJP.
 
+    Args:
+        x: Convolution input. Has shape ``[batch_size, in_channels, *input_sizes]``
+            where ``len(input_sizes) == N``.
+        v: Vector multiplied by the Jacobian. Has shape
+            ``[batch_size, out_channels, *output_sizes]``
+            where ``len(output_sizes) == N`` (same shape as the convolution's output).
+        kernel_size: Kernel dimensions. Can be a single integer (shared along all
+            spatial dimensions), or an ``N``-tuple of integers.
+        stride: Stride of the convolution. Can be a single integer (shared along all
+            spatial dimensions), or an ``N``-tuple of integers. Default: ``1``.
+        padding: Padding of the convolution. Can be a single integer (shared along
+            all spatial dimensions), an ``N``-tuple of integers, or a string.
+            Default: ``0``. Allowed strings are ``'same'`` and ``'valid'``.
+        dilation: Dilation of the convolution. Can be a single integer (shared along
+            all spatial dimensions), or an ``N``-tuple of integers. Default: ``1``.
+        groups: In how many groups to split the input channels. Default: ``1``.
+
     Returns:
         Einsum equation
-        Einsum operands in order ungrouped input,
+        Einsum operands in order ungrouped input, patterns, ungrouped vector.
         Output shape: ``[out_channels, in_channels // groups, *kernel_size]``
     """
     N = x.dim() - 2
@@ -37,11 +56,76 @@ def einsum_expression(
     return equation, operands, shape
 
 
+def _operands_and_shape(
+    x: Tensor,
+    v: Tensor,
+    kernel_size: Union[int, Tuple[int, ...]],
+    stride: Union[int, Tuple[int, ...]],
+    padding: Union[int, str, Tuple[int, ...]],
+    dilation: Union[int, Tuple[int, ...]],
+    groups: int,
+) -> Tuple[List[Tensor], Tuple[int, ...]]:
+    """Prepare the tensor contraction operands for the VJP.
+
+    Args:
+        x: Convolution input. Has shape ``[batch_size, in_channels, *input_sizes]``
+            where ``len(input_sizes) == N``.
+        v: Vector multiplied by the Jacobian. Has shape
+            ``[batch_size, out_channels, *output_sizes]``
+            where ``len(output_sizes) == N`` (same shape as the convolution's output).
+        kernel_size: Kernel dimensions. Can be a single integer (shared along all
+            spatial dimensions), or an ``N``-tuple of integers.
+        stride: Stride of the convolution. Can be a single integer (shared along all
+            spatial dimensions), or an ``N``-tuple of integers. Default: ``1``.
+        padding: Padding of the convolution. Can be a single integer (shared along
+            all spatial dimensions), an ``N``-tuple of integers, or a string.
+            Default: ``0``. Allowed strings are ``'same'`` and ``'valid'``.
+        dilation: Dilation of the convolution. Can be a single integer (shared along
+            all spatial dimensions), or an ``N``-tuple of integers. Default: ``1``.
+        groups: In how many groups to split the input channels. Default: ``1``.
+
+    Returns:
+        Einsum operands in order un-grouped input, patterns, un-grouped vector
+        Output shape
+    """
+    # convert into tuple format
+    N = x.dim() - 2
+    input_sizes = x.shape[2:]
+    t_kernel_size: Tuple[int, ...] = _tuple(kernel_size, N)
+    t_dilation: Tuple[int, ...] = _tuple(dilation, N)
+    t_padding: Union[Tuple[int, ...], str] = (
+        padding if isinstance(padding, str) else _tuple(padding, N)
+    )
+    t_stride: Tuple[int, ...] = _tuple(stride, N)
+
+    patterns: List[Tensor] = [
+        index_pattern(
+            input_sizes[n],
+            t_kernel_size[n],
+            stride=t_stride[n],
+            padding=t_padding if isinstance(t_padding, str) else t_padding[n],
+            dilation=t_dilation[n],
+            device=x.device,
+            dtype=x.dtype,
+        )
+        for n in range(N)
+    ]
+    x_ungrouped = rearrange(x, "n (g c_in) ... -> n g c_in ...", g=groups)
+    v_ungrouped = rearrange(v, "n (g c_out) ... -> n g c_out ...", g=groups)
+    operands = [x_ungrouped, *patterns, v_ungrouped]
+
+    in_channels = x.shape[1]
+    out_channels = v.shape[1]
+    shape = (out_channels, in_channels // groups, *t_kernel_size)
+
+    return operands, shape
+
+
 def _equation(N: int) -> str:
     """Return the einsum equation for a weight VJP.
 
     Args:
-        N: Convolution dimensionality
+        N: Convolution dimension.
 
     Returns:
         Einsum equation for the weight VJP. Argument order is assumed to
@@ -86,52 +170,3 @@ def _equation(N: int) -> str:
     input_equation = ",".join([x_str] + pattern_strs + [v_str])
 
     return "->".join([input_equation, output_str])
-
-
-def _operands_and_shape(
-    x: Tensor,
-    v: Tensor,
-    kernel_size: Union[int, Tuple[int, ...]],
-    stride: Union[int, Tuple[int, ...]],
-    padding: Union[int, str, Tuple[int, ...]],
-    dilation: Union[int, Tuple[int, ...]],
-    groups: int,
-) -> List[Tensor]:
-    """Prepare the tensor contraction operands for the VJP.
-
-    Returns:
-        Tensor list containing the operands. Convention: reshaped input, followed by
-        index pattern tensors, followed by reshaped grad_output.
-    """
-    # convert into tuple format
-    N = x.dim() - 2
-    input_sizes = x.shape[2:]
-    t_kernel_size: Tuple[int, ...] = _tuple(kernel_size, N)
-    t_dilation: Tuple[int, ...] = _tuple(dilation, N)
-    t_padding: Union[Tuple[int, ...], str] = (
-        padding if isinstance(padding, str) else _tuple(padding, N)
-    )
-    t_stride: Tuple[int, ...] = _tuple(stride, N)
-
-    patterns: List[Tensor] = [
-        index_pattern(
-            input_sizes[n],
-            t_kernel_size[n],
-            stride=t_stride[n],
-            padding=t_padding if isinstance(t_padding, str) else t_padding[n],
-            dilation=t_dilation[n],
-            device=x.device,
-            dtype=x.dtype,
-        )
-        for n in range(N)
-    ]
-    x_ungrouped = rearrange(x, "n (g c_in) ... -> n g c_in ...", g=groups)
-    v_ungrouped = rearrange(v, "n (g c_out) ... -> n g c_out ...", g=groups)
-
-    operands = [x_ungrouped, *patterns, v_ungrouped]
-
-    in_channels = x.shape[1]
-    out_channels = v.shape[1]
-    shape = (out_channels, in_channels // groups, *t_kernel_size)
-
-    return operands, shape
