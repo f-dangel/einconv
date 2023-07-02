@@ -14,7 +14,7 @@ CONV_1D_CASES = [
         "weight_fn": lambda: rand(4, 3, 5),
         "bias_fn": lambda: None,
         # stride, padding, dilation, groups
-        "conv_kwargs": {},
+        "kwargs": {},
     },
     # non-default stride, bias
     {
@@ -22,7 +22,7 @@ CONV_1D_CASES = [
         "input_fn": lambda: rand(2, 3, 50),
         "weight_fn": lambda: rand(4, 3, 5),
         "bias_fn": lambda: rand(4),
-        "conv_kwargs": {"stride": 2},
+        "kwargs": {"stride": 2},
     },
     # non-default stride, bias, groups
     {
@@ -30,7 +30,7 @@ CONV_1D_CASES = [
         "input_fn": lambda: rand(2, 4, 50),
         "weight_fn": lambda: rand(6, 2, 5),
         "bias_fn": lambda: rand(6),
-        "conv_kwargs": {"stride": 3, "groups": 2},
+        "kwargs": {"stride": 3, "groups": 2},
     },
     # non-default bias, padding
     {
@@ -38,7 +38,7 @@ CONV_1D_CASES = [
         "input_fn": lambda: rand(2, 3, 50),
         "weight_fn": lambda: rand(4, 3, 5),
         "bias_fn": lambda: rand(4),
-        "conv_kwargs": {"padding": 2},
+        "kwargs": {"padding": 2},
     },
     # padding, stride, dilation specified as tuple
     {
@@ -46,7 +46,7 @@ CONV_1D_CASES = [
         "input_fn": lambda: rand(2, 3, 50),
         "weight_fn": lambda: rand(4, 3, 5),
         "bias_fn": lambda: rand(4),
-        "conv_kwargs": {"padding": (2,), "stride": (3,), "dilation": (1,)},
+        "kwargs": {"padding": (2,), "stride": (3,), "dilation": (1,)},
     },
     # non-default dilation
     {
@@ -54,7 +54,7 @@ CONV_1D_CASES = [
         "input_fn": lambda: rand(2, 3, 50),
         "weight_fn": lambda: rand(4, 3, 5),
         "bias_fn": lambda: None,
-        "conv_kwargs": {"dilation": 2},
+        "kwargs": {"dilation": 2},
     },
     # padding supplied as string
     {
@@ -62,7 +62,7 @@ CONV_1D_CASES = [
         "input_fn": lambda: rand(2, 3, 20),
         "weight_fn": lambda: rand(4, 3, 5),
         "bias_fn": lambda: rand(4),
-        "conv_kwargs": {"padding": "same"},
+        "kwargs": {"padding": "same"},
     },
 ]
 CONV_1D_IDS = [make_id(case) for case in CONV_1D_CASES]
@@ -77,7 +77,7 @@ CONV_2D_CASES = [
         "weight_fn": lambda: rand(4, 3, 5, 5),
         "bias_fn": lambda: None,
         # stride, padding, dilation, groups
-        "conv_kwargs": {},
+        "kwargs": {},
     },
     # non-default stride, bias
     {
@@ -85,7 +85,7 @@ CONV_2D_CASES = [
         "input_fn": lambda: rand(2, 3, 50, 40),
         "weight_fn": lambda: rand(4, 3, 5, 5),
         "bias_fn": lambda: rand(4),
-        "conv_kwargs": {"stride": 2},
+        "kwargs": {"stride": 2},
     },
     # non-default stride, bias, groups
     {
@@ -93,7 +93,7 @@ CONV_2D_CASES = [
         "input_fn": lambda: rand(2, 4, 50, 40),
         "weight_fn": lambda: rand(6, 2, 5, 5),
         "bias_fn": lambda: rand(6),
-        "conv_kwargs": {"stride": 3, "groups": 2},
+        "kwargs": {"stride": 3, "groups": 2},
     },
     # non-default bias, padding
     {
@@ -101,7 +101,7 @@ CONV_2D_CASES = [
         "input_fn": lambda: rand(2, 3, 50, 40),
         "weight_fn": lambda: rand(4, 3, 5, 6),
         "bias_fn": lambda: rand(4),
-        "conv_kwargs": {"padding": 2},
+        "kwargs": {"padding": 2},
     },
     # padding, stride, dilation specified as tuple
     {
@@ -109,7 +109,7 @@ CONV_2D_CASES = [
         "input_fn": lambda: rand(2, 3, 50, 40),
         "weight_fn": lambda: rand(4, 3, 5, 3),
         "bias_fn": lambda: rand(4),
-        "conv_kwargs": {"padding": (2, 1), "stride": (3, 2), "dilation": (1, 2)},
+        "kwargs": {"padding": (2, 1), "stride": (3, 2), "dilation": (1, 2)},
     },
     # non-default dilation
     {
@@ -117,7 +117,7 @@ CONV_2D_CASES = [
         "input_fn": lambda: rand(2, 3, 50, 40),
         "weight_fn": lambda: rand(4, 3, 5, 6),
         "bias_fn": lambda: None,
-        "conv_kwargs": {"dilation": 2},
+        "kwargs": {"dilation": 2},
     },
     # padding supplied as string
     {
@@ -125,7 +125,7 @@ CONV_2D_CASES = [
         "input_fn": lambda: rand(2, 3, 50, 40),
         "weight_fn": lambda: rand(4, 3, 5, 3),
         "bias_fn": lambda: rand(4),
-        "conv_kwargs": {"padding": "same", "dilation": (1, 2)},
+        "kwargs": {"padding": "same", "dilation": (1, 2)},
     },
 ]
 CONV_2D_IDS = [make_id(case) for case in CONV_2D_CASES]
@@ -140,7 +140,7 @@ CONV_3D_CASES = [
         "weight_fn": lambda: rand(4, 3, 5, 5, 5),
         "bias_fn": lambda: None,
         # stride, padding, dilation, groups
-        "conv_kwargs": {},
+        "kwargs": {},
     },
     # non-default stride, bias
     {
@@ -148,7 +148,7 @@ CONV_3D_CASES = [
         "input_fn": lambda: rand(2, 3, 50, 40, 30),
         "weight_fn": lambda: rand(4, 3, 5, 5, 5),
         "bias_fn": lambda: rand(4),
-        "conv_kwargs": {"stride": 2},
+        "kwargs": {"stride": 2},
     },
     # non-default stride, bias, groups
     {
@@ -156,7 +156,7 @@ CONV_3D_CASES = [
         "input_fn": lambda: rand(2, 4, 50, 40, 30),
         "weight_fn": lambda: rand(6, 2, 5, 5, 5),
         "bias_fn": lambda: rand(6),
-        "conv_kwargs": {"stride": 3, "groups": 2},
+        "kwargs": {"stride": 3, "groups": 2},
     },
     # non-default bias, padding
     {
@@ -164,7 +164,7 @@ CONV_3D_CASES = [
         "input_fn": lambda: rand(2, 3, 50, 40, 30),
         "weight_fn": lambda: rand(4, 3, 5, 6, 7),
         "bias_fn": lambda: rand(4),
-        "conv_kwargs": {"padding": 2},
+        "kwargs": {"padding": 2},
     },
     # padding, stride, dilation specified as tuple
     {
@@ -172,7 +172,7 @@ CONV_3D_CASES = [
         "input_fn": lambda: rand(2, 3, 50, 40, 30),
         "weight_fn": lambda: rand(4, 3, 5, 3, 2),
         "bias_fn": lambda: rand(4),
-        "conv_kwargs": {
+        "kwargs": {
             "padding": (2, 1, 0),
             "stride": (3, 2, 1),
             "dilation": (1, 2, 3),
@@ -184,7 +184,7 @@ CONV_3D_CASES = [
         "input_fn": lambda: rand(2, 3, 50, 40, 40),
         "weight_fn": lambda: rand(4, 3, 5, 6, 7),
         "bias_fn": lambda: None,
-        "conv_kwargs": {"dilation": 2},
+        "kwargs": {"dilation": 2},
     },
     # padding supplied as string
     {
@@ -192,7 +192,7 @@ CONV_3D_CASES = [
         "input_fn": lambda: rand(2, 3, 50, 40, 30),
         "weight_fn": lambda: rand(4, 3, 5, 3, 2),
         "bias_fn": lambda: rand(4),
-        "conv_kwargs": {"padding": "same", "dilation": (1, 2, 2)},
+        "kwargs": {"padding": "same", "dilation": (1, 2, 2)},
     },
 ]
 CONV_3D_IDS = [make_id(case) for case in CONV_3D_CASES]
@@ -207,7 +207,7 @@ CONV_4D_CASES = [
         "weight_fn": lambda: rand(4, 3, 5, 5, 5, 5),
         "bias_fn": lambda: rand(4),
         # stride, padding, dilation, groups
-        "conv_kwargs": {},
+        "kwargs": {},
     },
     # non-trivial kwargs, non-trivial bias
     {
@@ -215,7 +215,7 @@ CONV_4D_CASES = [
         "input_fn": lambda: rand(2, 2, 40, 35, 30, 25),
         "weight_fn": lambda: rand(4, 1, 5, 5, 4, 3),
         "bias_fn": lambda: rand(4),
-        "conv_kwargs": {
+        "kwargs": {
             "padding": (2, 1, 0, 1),
             "stride": (3, 2, 1, 2),
             "dilation": (3, 2, 3, 1),
@@ -228,7 +228,7 @@ CONV_4D_CASES = [
         "input_fn": lambda: rand(2, 2, 10, 8, 6, 5),
         "weight_fn": lambda: rand(4, 1, 5, 5, 4, 3),
         "bias_fn": lambda: rand(4),
-        "conv_kwargs": {"padding": "same", "dilation": (2, 2, 2, 1), "groups": 2},
+        "kwargs": {"padding": "same", "dilation": (2, 2, 2, 1), "groups": 2},
     },
 ]
 CONV_4D_IDS = [make_id(case) for case in CONV_4D_CASES]

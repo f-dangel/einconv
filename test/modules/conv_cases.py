@@ -19,9 +19,7 @@ CONV_1D_CASES = [
         "out_channels": 4,
         "kernel_size": 5,
         # stride, padding, dilation, groups, padding_mode, bias
-        "conv_kwargs": {
-            "bias": False,
-        },
+        "kwargs": {"bias": False},
     },
     # non-default kwargs
     {
@@ -30,7 +28,7 @@ CONV_1D_CASES = [
         "in_channels": 3,
         "out_channels": 9,
         "kernel_size": 5,
-        "conv_kwargs": {
+        "kwargs": {
             "stride": 2,
             "padding": 1,
             "dilation": 2,
@@ -46,7 +44,7 @@ CONV_1D_CASES = [
         "in_channels": 6,
         "out_channels": 9,
         "kernel_size": (5,),
-        "conv_kwargs": {
+        "kwargs": {
             "stride": (2,),
             "padding": (1,),
             "dilation": (2,),
@@ -62,7 +60,7 @@ CONV_1D_CASES = [
         "in_channels": 6,
         "out_channels": 9,
         "kernel_size": (5,),
-        "conv_kwargs": {
+        "kwargs": {
             "padding": "same",
             "dilation": (2,),
             "groups": 3,
@@ -84,7 +82,7 @@ CONV_2D_CASES = [
         "out_channels": 4,
         "kernel_size": 5,
         # stride, padding, dilation, groups, padding_mode, bias
-        "conv_kwargs": {
+        "kwargs": {
             "bias": False,
         },
     },
@@ -95,7 +93,7 @@ CONV_2D_CASES = [
         "in_channels": 3,
         "out_channels": 9,
         "kernel_size": 5,
-        "conv_kwargs": {
+        "kwargs": {
             "stride": 2,
             "padding": 1,
             "dilation": 2,
@@ -111,7 +109,7 @@ CONV_2D_CASES = [
         "in_channels": 6,
         "out_channels": 9,
         "kernel_size": (5, 4),
-        "conv_kwargs": {
+        "kwargs": {
             "stride": (2, 3),
             "padding": (1, 0),
             "dilation": (2, 1),
@@ -127,7 +125,7 @@ CONV_2D_CASES = [
         "in_channels": 6,
         "out_channels": 9,
         "kernel_size": (5, 4),
-        "conv_kwargs": {
+        "kwargs": {
             "padding": "same",
             "dilation": (1, 2),
             "groups": 3,
@@ -147,7 +145,7 @@ CONV_3D_CASES = [
         "out_channels": 4,
         "kernel_size": 5,
         # stride, padding, dilation, groups, padding_mode, bias
-        "conv_kwargs": {
+        "kwargs": {
             "bias": False,
         },
     },
@@ -158,7 +156,7 @@ CONV_3D_CASES = [
         "in_channels": 3,
         "out_channels": 9,
         "kernel_size": 5,
-        "conv_kwargs": {
+        "kwargs": {
             "stride": 2,
             "padding": 1,
             "dilation": 2,
@@ -174,7 +172,7 @@ CONV_3D_CASES = [
         "in_channels": 6,
         "out_channels": 9,
         "kernel_size": (5, 4, 3),
-        "conv_kwargs": {
+        "kwargs": {
             "stride": (2, 3, 2),
             "padding": (1, 0, 2),
             "dilation": (2, 1, 3),
@@ -190,7 +188,7 @@ CONV_3D_CASES = [
         "in_channels": 6,
         "out_channels": 9,
         "kernel_size": (5, 4, 3),
-        "conv_kwargs": {
+        "kwargs": {
             "padding": "same",
             "dilation": (2, 1, 3),
             "groups": 3,
@@ -210,7 +208,7 @@ CONV_4D_CASES = [
         "out_channels": 4,
         "kernel_size": 5,
         # stride, padding, dilation, groups, padding_mode, bias
-        "conv_kwargs": {},
+        "kwargs": {},
     },
     # no kwargs except for bias disabled
     {
@@ -221,7 +219,7 @@ CONV_4D_CASES = [
         "out_channels": 4,
         "kernel_size": 5,
         # stride, padding, dilation, groups, padding_mode, bias
-        "conv_kwargs": {
+        "kwargs": {
             "bias": False,
         },
     },
@@ -232,7 +230,7 @@ CONV_4D_CASES = [
         "in_channels": 2,
         "out_channels": 4,
         "kernel_size": (5, 5, 4, 3),
-        "conv_kwargs": {
+        "kwargs": {
             "stride": (2, 3, 2, 1),
             "padding": (2, 0, 2, 1),
             "dilation": (2, 1, 3, 2),
@@ -248,7 +246,7 @@ CONV_4D_CASES = [
         "in_channels": 2,
         "out_channels": 4,
         "kernel_size": (5, 5, 4, 3),
-        "conv_kwargs": {
+        "kwargs": {
             "padding": "same",
             "dilation": (2, 1, 3, 2),
             "groups": 2,
@@ -268,7 +266,7 @@ CONV_5D_CASES = [
         "out_channels": 4,
         "kernel_size": 3,
         # stride, padding, dilation, groups, padding_mode, bias
-        "conv_kwargs": {
+        "kwargs": {
             "bias": False,
         },
     },
@@ -279,7 +277,7 @@ CONV_5D_CASES = [
         "in_channels": 2,
         "out_channels": 4,
         "kernel_size": (5, 4, 2, 3, 4),
-        "conv_kwargs": {
+        "kwargs": {
             "stride": (4, 3, 1, 2, 4),
             "padding": (2, 0, 1, 1, 3),
             "groups": 2,
@@ -298,7 +296,7 @@ CONV_5D_CASES = [
         "in_channels": 2,
         "out_channels": 4,
         "kernel_size": (5, 4, 2, 3, 4),
-        "conv_kwargs": {
+        "kwargs": {
             "stride": (4, 3, 1, 2, 4),
             "padding": (0, 1, 0, 0, 0),
             "groups": 2,
@@ -319,7 +317,7 @@ CONV_6D_CASES = [
         "out_channels": 4,
         "kernel_size": 3,
         # stride, padding, dilation, groups, padding_mode, bias
-        "conv_kwargs": {
+        "kwargs": {
             "bias": False,
         },
     },
@@ -330,7 +328,7 @@ CONV_6D_CASES = [
         "in_channels": 2,
         "out_channels": 4,
         "kernel_size": (3, 2, 3, 4, 2, 2),
-        "conv_kwargs": {
+        "kwargs": {
             "stride": (3, 2, 2, 3, 3, 2),
             "padding": (2, 0, 0, 2, 1, 1),
             "groups": 2,
@@ -361,7 +359,7 @@ def conv_module_from_case(
         case["in_channels"],
         case["out_channels"],
         case["kernel_size"],
-        **case["conv_kwargs"],
+        **case["kwargs"],
         device=device,
         dtype=dtype,
     )
@@ -386,7 +384,7 @@ def convNd_module_from_case(
         case["in_channels"],
         case["out_channels"],
         case["kernel_size"],
-        **case["conv_kwargs"],
+        **case["kwargs"],
         device=device,
         dtype=dtype,
     )

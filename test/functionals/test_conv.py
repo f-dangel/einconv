@@ -32,8 +32,8 @@ def _test_convNd(N: int, case: Dict, device: device):
     x, weight, bias = _setup(case, device)
 
     conv_func = {1: conv1d, 2: conv2d, 3: conv3d}[N]
-    conv_output = conv_func(x, weight, bias=bias, **case["conv_kwargs"])
-    einconv_output = functionals.convNd(x, weight, bias=bias, **case["conv_kwargs"])
+    conv_output = conv_func(x, weight, bias=bias, **case["kwargs"])
+    einconv_output = functionals.convNd(x, weight, bias=bias, **case["kwargs"])
 
     report_nonclose(conv_output, einconv_output)
 
@@ -107,7 +107,7 @@ def test_conv4d(case: Dict, device: device):
         device: Device for executing the test.
     """
     x, weight, bias = _setup(case, device)
-    einconv_output = functionals.convNd(x, weight, bias=bias, **case["conv_kwargs"])
-    jax_output = jax_convNd(x, weight, bias=bias, **case["conv_kwargs"])
+    einconv_output = functionals.convNd(x, weight, bias=bias, **case["kwargs"])
+    jax_output = jax_convNd(x, weight, bias=bias, **case["kwargs"])
 
     report_nonclose(einconv_output, jax_output)

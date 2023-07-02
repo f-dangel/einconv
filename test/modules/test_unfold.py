@@ -34,12 +34,13 @@ def test_UnfoldNd(case: Dict, device: torch.device):
     seed = case["seed"]
     input_fn = case["input_fn"]
     kernel_size = case["kernel_size"]
-    unfold_kwargs = case["unfold_kwargs"]
+    kwargs = case["kwargs"]
 
     torch.manual_seed(seed)
     inputs = input_fn().to(device)
 
-    result_unfold = unfoldNd.UnfoldNd(kernel_size, **unfold_kwargs).to(device)(inputs)
-    result_einconv = modules.UnfoldNd(kernel_size, **unfold_kwargs).to(device)(inputs)
+    result_unfold = unfoldNd.UnfoldNd(kernel_size, **kwargs).to(device)(inputs)
+    result_einconv = modules.UnfoldNd(kernel_size, **kwargs).to(device)(inputs)
+    print(result_unfold.shape, result_einconv.shape)
 
     report_nonclose(result_unfold, result_einconv)

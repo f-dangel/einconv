@@ -43,6 +43,6 @@ def unfoldNd(
         ``n (c_in k1 k2 ...) (o1 o2 ...)``.
     """
     equation, operands, shape = convNd_unfold.einsum_expression(
-        x, kernel_size, dilation, padding, stride
+        x, kernel_size, stride=stride, padding=padding, dilation=dilation
     )
     return einsum(equation, *operands).reshape(shape)
