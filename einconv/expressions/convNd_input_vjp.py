@@ -42,7 +42,7 @@ def einsum_expression(
     Returns:
         Einsum equation
         Einsum operands in order un-grouped vector, patterns, un-grouped weight
-        Output shape
+        Output shape: ``[batch_size, in_channels, *input_sizes]``
     """
     N = weight.dim() - 2
     equation = _equation(N)

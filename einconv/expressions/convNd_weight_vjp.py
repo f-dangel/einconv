@@ -19,9 +19,9 @@ def einsum_expression(
     """Generate einsum expression of a convolution's weight VJP.
 
     Returns:
-        Einsum equation,
-        Einsum operands,
-        Output shape.
+        Einsum equation
+        Einsum operands in order ungrouped input,
+        Output shape: ``[out_channels, in_channels // groups, *kernel_size]``
     """
     N = x.dim() - 2
     equation = _equation(N)

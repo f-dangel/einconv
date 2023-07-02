@@ -9,14 +9,34 @@ from einconv.utils import _tuple, get_letters
 def einsum_expression(
     x: Tensor,
     kernel_size: Union[int, Tuple[int, ...]],
-    dilation: Union[int, Tuple[int, ...]] = 1,
-    padding: Union[str, int, Tuple[int, ...]] = 0,
     stride: Union[int, Tuple[int, ...]] = 1,
+    padding: Union[str, int, Tuple[int, ...]] = 0,
+    dilation: Union[int, Tuple[int, ...]] = 1,
 ):
+    """Generate einsum expression to unfold the input of a convolution.
+
+    Args:
+        x: Convolution input. Has shape ``[batch_size, in_channels, *input_sizes]``
+            where ``len(input_sizes) == N``.
+        kernel_size: Kernel dimensions. Can be a single integer (shared along all
+            spatial dimensions), or an ``N``-tuple of integers.
+        stride: Stride of the convolution. Can be a single integer (shared along all
+            spatial dimensions), or an ``N``-tuple of integers. Default: ``1``.
+        padding: Padding of the convolution. Can be a single integer (shared along
+            all spatial dimensions), an ``N``-tuple of integers, or a string.
+            Default: ``0``. Allowed strings are ``'same'`` and ``'valid'``.
+        dilation: Dilation of the convolution. Can be a single integer (shared along
+            all spatial dimensions), or an ``N``-tuple of integers. Default: ``1``.
+
+    Returns:
+        Einsum equation
+        Einsum operands in order input, patterns
+        Output shape: ``[batch_size, in_channels, tot_output_sizes]``
+    """
     N = x.dim() - 2
     equation = _equation(N)
     operands, shape = _operands_and_shape(
-        x, kernel_size, dilation=dilation, padding=padding, stride=stride
+        x, kernel_size, padding=padding, stride=stride, dilation=dilation
     )
     return equation, operands, shape
 
@@ -24,17 +44,37 @@ def einsum_expression(
 def _operands_and_shape(
     x: Tensor,
     kernel_size: Union[int, Tuple[int, ...]],
-    dilation: Optional[Union[int, Tuple[int, ...]]] = 1,
-    padding: Optional[Union[int, Tuple[int, ...], str]] = 0,
-    stride: Optional[Union[int, Tuple[int, ...]]] = 1,
-) -> Tuple[List[Tensor], Tuple[int]]:
-    N = x.dim() - 2
-    (batch_size, in_channels), input_sizes = x.shape[:2], x.shape[2:]
+    stride: Union[int, Tuple[int, ...]] = 1,
+    padding: Union[int, Tuple[int, ...], str] = 0,
+    dilation: Union[int, Tuple[int, ...]] = 1,
+) -> Tuple[List[Tensor], Tuple[int, ...]]:
+    """Prepare operands for contraction with einsum.
 
+    Args:
+        x: Convolution input. Has shape ``[batch_size, in_channels, *input_sizes]``
+            where ``len(input_sizes) == N``.
+        kernel_size: Kernel dimensions. Can be a single integer (shared along all
+            spatial dimensions), or an ``N``-tuple of integers.
+        stride: Stride of the convolution. Can be a single integer (shared along all
+            spatial dimensions), or an ``N``-tuple of integers. Default: ``1``.
+        padding: Padding of the convolution. Can be a single integer (shared along
+            all spatial dimensions), an ``N``-tuple of integers, or a string.
+            Default: ``0``. Allowed strings are ``'same'`` and ``'valid'``.
+        dilation: Dilation of the convolution. Can be a single integer (shared along
+            all spatial dimensions), or an ``N``-tuple of integers. Default: ``1``.
+
+    Returns:
+        Tensor list containing the operands in order input, patterns.
+        Output shape.
+    """
     # convert into tuple format
+    N = x.dim() - 2
+    input_sizes = x.shape[2:]
     t_kernel_size: Tuple[int, ...] = _tuple(kernel_size, N)
     t_dilation: Tuple[int, ...] = _tuple(dilation, N)
-    t_padding: Union[Tuple[int, ...], str] = _tuple(padding, N)
+    t_padding: Union[Tuple[int, ...], str] = (
+        padding if isinstance(padding, str) else _tuple(padding, N)
+    )
     t_stride: Tuple[int, ...] = _tuple(stride, N)
 
     patterns: List[Tensor] = [
@@ -42,19 +82,21 @@ def _operands_and_shape(
             input_sizes[n],
             t_kernel_size[n],
             stride=t_stride[n],
-            padding=t_padding[n],
+            padding=t_padding if isinstance(t_padding, str) else t_padding[n],
             dilation=t_dilation[n],
             device=x.device,
             dtype=x.dtype,
         )
         for n in range(N)
     ]
+    operands = [x, *patterns]
 
-    output_tot_size = Tensor([p.shape[1] for p in patterns]).int().prod()
-    kernel_tot_size = Tensor(t_kernel_size).int().prod()
-    output_shape = (batch_size, in_channels * kernel_tot_size, output_tot_size)
+    output_tot_size = int(Tensor([p.shape[1] for p in patterns]).int().prod())
+    kernel_tot_size = int(Tensor(t_kernel_size).int().prod())
+    batch_size, in_channels = x.shape[:2]
+    shape = (batch_size, in_channels * kernel_tot_size, output_tot_size)
 
-    return [x] + patterns, output_shape
+    return operands, shape
 
 
 def _equation(N: int) -> str:

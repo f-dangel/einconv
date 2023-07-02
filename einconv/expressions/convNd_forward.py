@@ -1,6 +1,6 @@
 """Generates einsum expression of the forward pass of a convolution."""
 
-from typing import List, Optional, Tuple, Union
+from typing import List, Tuple, Union
 
 from einops import rearrange
 from torch import Tensor
@@ -38,7 +38,7 @@ def einsum_expression(
     Returns:
         Einsum equation
         Einsum operands in order un-grouped input, patterns, un-grouped weight
-        Output shape
+        Output shape: ``[batch_size, out_channels, *output_sizes]``.
     """
     N = x.dim() - 2
     equation = _equation(N)
@@ -57,6 +57,21 @@ def _operands_and_shape(
     groups: int = 1,
 ) -> Tuple[List[Union[Tensor, Parameter]], Tuple[int, ...]]:
     """Prepare operands for contraction with einsum.
+
+    Args:
+        x: Convolution input. Has shape ``[batch_size, in_channels, *input_sizes]``
+            where ``len(input_sizes) == N``.
+        weight: Kernel of the convolution. Has shape ``[out_channels,
+            in_channels / groups, *kernel_size]`` where ``kernel_size`` is an
+            ``N``-tuple of kernel dimensions.
+        stride: Stride of the convolution. Can be a single integer (shared along all
+            spatial dimensions), or an ``N``-tuple of integers. Default: ``1``.
+        padding: Padding of the convolution. Can be a single integer (shared along
+            all spatial dimensions), an ``N``-tuple of integers, or a string.
+            Default: ``0``. Allowed strings are ``'same'`` and ``'valid'``.
+        dilation: Dilation of the convolution. Can be a single integer (shared along
+            all spatial dimensions), or an ``N``-tuple of integers. Default: ``1``.
+        groups: In how many groups to split the input channels. Default: ``1``.
 
     Returns:
         Tensor list containing the operands in order un-grouped input, index patterns, \
