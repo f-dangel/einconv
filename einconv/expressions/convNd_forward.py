@@ -43,7 +43,7 @@ def einsum_expression(
     N = x.dim() - 2
     equation = _equation(N)
     operands, shape = _operands_and_shape(
-        x, weight, dilation=dilation, padding=padding, stride=stride, groups=groups
+        x, weight, stride=stride, padding=padding, dilation=dilation, groups=groups
     )
     return equation, operands, shape
 
@@ -88,14 +88,14 @@ def _operands_and_shape(
     ]
     x_ungrouped = rearrange(x, "n (g c_in) ... -> n g c_in ...", g=groups)
     weight_ungrouped = rearrange(weight, "(g c_out) ... -> g c_out ...", g=groups)
-    operands = [x_ungrouped] + patterns + [weight_ungrouped]
+    operands = [x_ungrouped, *patterns, weight_ungrouped]
 
     output_sizes = [p.shape[1] for p in patterns]
     batch_size = x.shape[0]
     out_channels = weight.shape[0]
-    output_shape = (batch_size, out_channels, *output_sizes)
+    shape = (batch_size, out_channels, *output_sizes)
 
-    return operands, output_shape
+    return operands, shape
 
 
 def _equation(N: int) -> str:
