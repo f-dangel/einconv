@@ -20,18 +20,12 @@ def index_pattern(
     device: torch.device = cpu,
     dtype: torch.dtype = torch.bool,
 ) -> Tensor:
-    """Compute the 'dummy tensor' containing the index pattern of a conv. dimension.
+    """Compute the connectivity pattern tensor of a convolution along one dimension.
 
     Uses one-dimensional convolution under the hood.
 
-    The dummy tensor is denoted 𝒫 in the paper (see page 3):
-
-    - Hayashi, K., Yamaguchi, T., Sugawara, Y., & Maeda, S. (2019). Exploring
-      unexplored tensor network decompositions for convolutional neural networks.
-      Advances in Neural Information Processing Systems (NeurIPS).
-
     Args:
-        input_size: Number of pixels along dimension.
+        input_size: Spatial input dimension of the convolution.
         kernel_size: Kernel size along dimension.
         stride: Stride along dimension. Default: ``1``.
         padding: Padding along dimension. Can be an integer or a string. Allowed
@@ -41,10 +35,11 @@ def index_pattern(
         dtype: Data type of the pattern tensor. Default: ``torch.bool``.
 
     Returns:
-        Boolean tensor of shape ``[kernel_size, output_size, input_size]`` \
-        representing the index pattern. Its element ``[k, o, i]`` is ``True`` If \
-        element ``i`` if the input element ``i`` contributes to output element ``o`` \
-        via the ``k`` the kernel entry (``False`` otherwise).
+        Index pattern tensor. Has shape ``[kernel_size, output_size, input_size]`` and \
+        the specified data type. Its element ``[k, o, i]`` is ``True`` (or equivalent \
+        cast) if element ``i`` of the input contributes to output element ``o`` via \
+        the ``k``th kernel entry (``False`` otherwise). The hyper-parameters are \
+        stored under the tensor's ``._pattern_hyperparams`` attribute.
     """
     in_idxs_dtype = torch.int32
     # in some cases, conv1d does not support int32 inputs.
@@ -101,18 +96,14 @@ def index_pattern_logical(
     device: torch.device = cpu,
     dtype: torch.dtype = torch.bool,
 ) -> Tensor:
-    """Compute the 'dummy tensor' containing the index pattern of a conv. dimension.
+    """Compute the connectivity pattern tensor of a convolution along one dimension.
 
-    Uses logical statements under the hood.
-
-    The dummy tensor is denoted 𝒫 in the paper (see page 3):
-
-    - Hayashi, K., Yamaguchi, T., Sugawara, Y., & Maeda, S. (2019). Exploring
-      unexplored tensor network decompositions for convolutional neural networks.
-      Advances in Neural Information Processing Systems (NeurIPS).
+    Uses logical expressions under the hood. This an alternative to ``index_pattern``
+    whose implementation makes the index pattern's structure clearer as it does not
+    rely on convolution.
 
     Args:
-        input_size: Number of pixels along dimension.
+        input_size: Spatial input dimension of the convolution.
         kernel_size: Kernel size along dimension.
         stride: Stride along dimension. Default: ``1``.
         padding: Padding along dimension. Can be an integer or a string. Allowed
@@ -122,10 +113,11 @@ def index_pattern_logical(
         dtype: Data type of the pattern tensor. Default: ``torch.bool``.
 
     Returns:
-        Boolean tensor of shape ``[kernel_size, output_size, input_size]`` representing
-        the index pattern. Its element ``[k, o, i]`` is ``True`` If element ``i`` if the
-        input element ``i`` contributes to output element ``o`` via the ``k`` the kernel
-        entry (``False`` otherwise).
+        Index pattern tensor. Has shape ``[kernel_size, output_size, input_size]`` and \
+        the specified data type. Its element ``[k, o, i]`` is ``True`` (or equivalent \
+        cast) if element ``i`` of the input contributes to output element ``o`` via \
+        the ``k``th kernel entry (``False`` otherwise). The hyper-parameters are \
+        stored under the tensor's ``._pattern_hyperparams`` attribute.
     """
     output_size = get_conv_output_size(
         input_size, kernel_size, stride, padding, dilation
