@@ -104,16 +104,12 @@ def _equation(N: int) -> str:
 def _operands_and_shape(
     x: Tensor,
     kernel_size: Union[int, Tuple[int, ...]],
-    stride: Union[int, Tuple[int, ...]],
-    padding: Union[int, str, Tuple[int, ...]],
-    dilation: Union[int, Tuple[int, ...]],
-    groups: int,
+    stride: Union[int, Tuple[int, ...]] = 1,
+    padding: Union[int, str, Tuple[int, ...]] = 0,
+    dilation: Union[int, Tuple[int, ...]] = 1,
+    groups: int = 1,
 ) -> List[Tensor]:
     """Generate einsum operands for KFC factor.
-
-    Args:
-        See ``einconvNd``.
-        # noqa: DAR101
 
     Returns:
         Tensor list containing the operands. Convention: Input, followed by

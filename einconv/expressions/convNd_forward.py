@@ -50,10 +50,6 @@ def _operands_and_shape(
 ) -> Tuple[List[Union[Tensor, Parameter]], Tuple[int, ...]]:
     """Prepare the tensor contraction operands.
 
-    Args:
-        See ``einconvNd``.
-        # noqa: DAR101
-
     Returns:
         Tensor list containing the operands. Convention: reshaped input, followed by
         index pattern tensors, followed by reshaped weight.

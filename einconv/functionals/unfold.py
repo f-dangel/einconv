@@ -20,8 +20,6 @@ def unfoldNd(
 
     See docs at https://pytorch.org/docs/stable/nn.functional.html#unfold.
 
-    # noqa: DAR101
-    # noqa: DAR201
 
     Returns:
         Unfolded input of shape

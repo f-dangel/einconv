@@ -31,17 +31,16 @@ class ConvNd(Module):
         device: Union[None, torch.device] = None,
         dtype: Union[None, torch.dtype] = None,
     ) -> None:
-        """Initialize convolution layer.
-
-        The weight has shape ``[out_channels, in_channels // groups, *kernel_size]``
-        with ``len(kernel_size)==N``. The bias has shape ``[out_channels]``.
+        """Initialize N-dimensional convolution layer.
 
         Parameters are initialized using the same convention as PyTorch's convolutions.
 
+        The weight has shape ``[out_channels, in_channels // groups, *kernel_size]``
+        with ``len(kernel_size) == N``. The bias has shape ``[out_channels]``.
+
         Args:
             N: Convolution dimension. For ``N=1,2,3`` the layer behaves like PyTorch's
-                ``nn.Conv{N=1,2,3}d`` layers. However, this layer generalizes
-                convolution and therefore also supports ``N>3``.
+                ``nn.Conv{N=1,2,3}d``. However, it also works for ``N>3``.
             in_channels: Number of input channels.
             out_channels: Number of output channels.
             kernel_size: Kernel dimensions. Can be a single integer (shared along all
@@ -53,8 +52,8 @@ class ConvNd(Module):
                 Default: ``0``. Allowed strings are ``'same'`` and ``'valid'``.
             dilation: Dilation of the convolution. Can be a single integer (shared along
                 all spatial dimensions), or an ``N``-tuple of integers. Default: ``1``.
-            groups: How to split the input into groups. Default: ``1``.
-            bias: Whether to use a non-zero bias vector. Default: ``True``.
+            groups: In how many groups to split the input channels. Default: ``1``.
+            bias: Whether to use a bias. Default: ``True``.
             padding_mode: How to perform padding. Default: ``'zeros'``. No other modes
                 are supported at the moment.
             device: Device on which the module is initialized.
@@ -67,6 +66,7 @@ class ConvNd(Module):
         """
         super().__init__()
 
+        # basic argument checks
         if padding_mode != "zeros":
             raise NotImplementedError("Only padding_mode='zeros' supported.")
 
@@ -84,6 +84,8 @@ class ConvNd(Module):
         self.N = N
         self.in_channels = in_channels
         self.out_channels = out_channels
+
+        # standardize into N-tuple form if possible
         self.kernel_size = _tuple(kernel_size, N)
         self.stride = _tuple(stride, N)
         self.padding = padding if isinstance(padding, str) else _tuple(padding, N)
@@ -91,29 +93,30 @@ class ConvNd(Module):
         self.dilation = _tuple(dilation, N)
         self.groups = groups
 
+        # initialize parameters
         device = torch.device("cpu") if device is None else device
         dtype = torch.float32 if dtype is None else dtype
-
         weight_shape = (out_channels, in_channels // groups, *self.kernel_size)
-        self.weight = Parameter(empty(weight_shape, device=device, dtype=dtype))
-
-        if bias:
-            bias_shape = (out_channels,)
-            self.bias = Parameter(empty(bias_shape, device=device, dtype=dtype))
-        else:
-            self.register_parameter("bias", None)
+        self.register_parameter(
+            "weight", Parameter(empty(weight_shape, device=device, dtype=dtype))
+        )
+        bias_shape = (out_channels,)
+        self.register_parameter(
+            "bias",
+            Parameter(empty(bias_shape, device=device, dtype=dtype)) if bias else None,
+        )
 
         self.reset_parameters()
 
     @classmethod
     def from_nn_Conv(cls, conv_module: Union[Conv1d, Conv2d, Conv3d]) -> ConvNd:
-        """Convert a ``torch.nn.Conv{1,2,3}d`` module to a ``EinconvNd`` layer.
+        """Convert a ``torch.nn.Conv{1,2,3}d`` module to a ``ConvNd`` layer.
 
         Args:
             conv_module: Convolution module.
 
         Returns:
-            EinconvNd module.
+            Converted ConvNd module.
         """
         N = {Conv1d: 1, Conv2d: 2, Conv3d: 3}[conv_module.__class__]
         einconv_module = cls(
@@ -151,14 +154,14 @@ class ConvNd(Module):
         """Perform convolution on the input.
 
         Args:
-            x: Convolution input. Has shape
-                ``[batch_size, in_channels, *spatial_in_dims]`` where
-                ``len(spatial_in_dims)==N``.
+            x: Convolution input. Has shape ``[batch_size, in_channels, *input_sizes]``
+                where ``len(input_sizes) == N``.
 
         Returns:
-            Result of the convolution. Has shape
-                ``[batch_size, out_channels, *spatial_out_dims]`` where
-                ``len(spatial_out_dims)==N``.
+            Result of the convolution. Has shape \
+            ``[batch_size, out_channels, *output_sizes]`` where \
+            ``len(output_sizes) == N``. In ``einops`` notation, the index structure \
+            is ``n (g c_out) o1 o2 ...``.
         """
         return convNd(
             x,

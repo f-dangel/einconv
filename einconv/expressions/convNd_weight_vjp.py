@@ -99,10 +99,6 @@ def _operands_and_shape(
 ) -> List[Tensor]:
     """Prepare the tensor contraction operands for the VJP.
 
-    Args:
-        See ``einconvNd``.
-        # noqa: DAR101
-
     Returns:
         Tensor list containing the operands. Convention: reshaped input, followed by
         index pattern tensors, followed by reshaped grad_output.
