@@ -11,12 +11,12 @@ from einconv.expressions import convNd_forward
 def convNd(
     x: Tensor,
     weight: Union[Tensor, Parameter],
-    bias: Union[Tensor, None] = None,
+    bias: Union[Tensor, Parameter, None] = None,
     stride: Union[int, Tuple[int, ...]] = 1,
     padding: Union[int, str, Tuple[int, ...]] = 0,
     dilation: Union[int, Tuple[int, ...]] = 1,
     groups: int = 1,
-):
+) -> Tensor:
     """Generalization of ``torch.nn.functional.conv{1,2,3}d`` to ``N``d.
 
     ``N`` is determined from the input tensor: It's first axis is the batch dimension,
@@ -24,28 +24,29 @@ def convNd(
     interpreted as spatial dimension (with number of spatial dimensions ``N``)
 
     Args:
-        x: Input of the convolution. Has shape ``[batch_size,
-            in_channels, *]`` where ``*`` can be an arbitrary shape. The
-            convolution dimension is ``len(*)``.
+        x: Convolution input. Has shape ``[batch_size, in_channels, *input_sizes]``
+            where ``len(input_sizes) == N``.
         weight: Kernel of the convolution. Has shape ``[out_channels,
-            in_channels / groups, *]`` where ``*`` contains the kernel sizes and has
-            length ``N``.
+            in_channels / groups, *kernel_size]`` where ``kernel_size`` is an
+            ``N``-tuple of kernel dimensions.
         bias: Optional bias vector of the convolution. Has shape ``[out_channels]``.
             Default: ``None``.
         stride: Stride of the convolution. Can be a single integer (shared along all
             spatial dimensions), or an ``N``-tuple of integers. Default: ``1``.
-        padding: Padding of the convolution. Can be a single integer (shared along all
-            spatial dimensions), an ``N``-tuple of integers, or a string. Allowed
-            strings are ``'same'`` and ``'valid'``. Default: ``0``.
-        dilation: Dilation of the convolution. Can be a single integer (shared along all
-            spatial dimensions), or an ``N``-tuple of integers. Default: ``1``.
-        groups: How to split the input into groups. Default: ``1``.
+        padding: Padding of the convolution. Can be a single integer (shared along
+            all spatial dimensions), an ``N``-tuple of integers, or a string.
+            Default: ``0``. Allowed strings are ``'same'`` and ``'valid'``.
+        dilation: Dilation of the convolution. Can be a single integer (shared along
+            all spatial dimensions), or an ``N``-tuple of integers. Default: ``1``.
+        groups: In how many groups to split the input channels. Default: ``1``.
 
     Returns:
-        Result of the convolution. Has shape ``[batch_size, out_channels, *]`` where
-        ``*`` is the the spatial output dimension shape.
+        Result of the convolution. Has shape \
+        ``[batch_size, out_channels, *output_sizes]`` where \
+        ``len(output_sizes) == N``. In ``einops`` notation, the index structure \
+        is ``n (g c_out) o1 o2 ...``.
     """
-    _check_args(x, weight, bias, groups)
+    _check_args(x, weight, bias=bias, groups=groups)
     equation, operands, shape = convNd_forward.einsum_expression(
         x, weight, stride=stride, padding=padding, dilation=dilation, groups=groups
     )
@@ -60,12 +61,23 @@ def convNd(
     return output
 
 
-def _check_args(x: Tensor, weight: Tensor, bias: Union[Tensor, None], groups: int):
+def _check_args(
+    x: Tensor,
+    weight: Tensor,
+    bias: Union[Tensor, Parameter, None] = None,
+    groups: int = 1,
+):
     """Check the input arguments to ``convNd``.
 
     Args:
-        See ``einconvNd``.
-        # noqa: DAR101
+        x: Convolution input. Has shape ``[batch_size, in_channels, *input_sizes]``
+            where ``len(input_sizes) == N``.
+        weight: Kernel of the convolution. Has shape ``[out_channels,
+            in_channels / groups, *kernel_size]`` where ``kernel_size`` is an
+            ``N``-tuple of kernel dimensions.
+        bias: Optional bias vector of the convolution. Has shape ``[out_channels]``.
+            Default: ``None``.
+        groups: In how many groups to split the input channels. Default: ``1``.
 
     Raises:
         ValueError: If bias has incorrect shape.

@@ -10,7 +10,7 @@ def einsum_expression(
     x: Tensor,
     kernel_size: Union[int, Tuple[int, ...]],
     dilation: Union[int, Tuple[int, ...]] = 1,
-    padding: Union[int, Tuple[int, ...]] = 0,
+    padding: Union[str, int, Tuple[int, ...]] = 0,
     stride: Union[int, Tuple[int, ...]] = 1,
 ):
     N = x.dim() - 2
