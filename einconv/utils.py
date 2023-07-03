@@ -179,14 +179,21 @@ def get_letters(num_letters: int, blocked: Optional[Set] = None) -> List[str]:
         ValueError: If ``num_letters`` cannot be satisfies with einsum-supported
             letters.
     """
-    max_letters = 26
-    letters = {chr(ord("a") + i) for i in range(max_letters)}
-    blocked = set() if blocked is None else blocked
-    non_blocked = list(letters - blocked)
+    if num_letters == 0:
+        return []
 
-    if num_letters > len(non_blocked):
-        raise ValueError(
-            f"einsum supports {max_letters} letters. Requested {num_letters}."
-            + f" Non-blocked {len(non_blocked)}.)"
-        )
-    return non_blocked[:num_letters]
+    max_letters = 26
+    blocked = set() if blocked is None else blocked
+    letters = []
+
+    for i in range(max_letters):
+        letter = chr(ord("a") + i)
+        if letter not in blocked:
+            letters.append(letter)
+            if len(letters) == num_letters:
+                return letters
+
+    raise ValueError(
+        f"Ran out of letters. PyTorch's einsum supports {max_letters} letters."
+        + f" Requested {num_letters}, blocked: {len(blocked)}.)"
+    )
