@@ -5,24 +5,22 @@ from typing import List, Tuple, Union
 from torch import Tensor
 from torch.nn import Parameter
 
+from einconv.simplifications.opt import TensorNetwork
+
 
 def simplify(
     equation: str, operands: List[Union[Tensor, Parameter]]
-) -> Tuple[str, List[Tensor], Tuple[int]]:
+) -> Tuple[str, List[Union[Tensor, Parameter]]]:
     """Simplify an einsum expressions.
 
     Args:
         equation: Einsum equation.
         operands: Einsum operands.
 
-    # noqa: DAR202
-
     Returns:
-        Simplified einsum equation
-        Simplified einsum operands
-        Output shape
-
-    Raises:
-        NotImplementedError: This function still needs to be implemented.
+        Simplified einsum equation.
+        Simplified einsum operands.
     """
-    raise NotImplementedError
+    tn = TensorNetwork(equation, operands)
+    tn.simplify()
+    return tn.generate_expression()
