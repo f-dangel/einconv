@@ -72,7 +72,7 @@ def translate_to_torch(einops_equation: str) -> str:
     A valid PyTorch version would be ``'ij,jk->ik'``.
 
     Args:
-        equation: Einsum equation in einops syntax.
+        einops_equation: Einsum equation in einops syntax.
 
     Returns:
         Einsum equation in PyTorch syntax.
