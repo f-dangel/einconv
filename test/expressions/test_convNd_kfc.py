@@ -8,7 +8,7 @@ from test.expressions.convNd_kfc_cases import (
     KFC_3D_CASES,
     KFC_3D_IDS,
 )
-from test.utils import DEVICE_IDS, DEVICES, report_nonclose
+from test.utils import DEVICE_IDS, DEVICES, SIMPLIFIES, SIMPLIFY_IDS, report_nonclose
 from typing import Dict
 
 import torch
@@ -20,18 +20,20 @@ from torch import einsum
 from einconv.expressions import convNd_kfc
 
 
+@mark.parametrize("simplify", SIMPLIFIES, ids=SIMPLIFY_IDS)
 @mark.parametrize(
     "case",
     KFC_1D_CASES + KFC_2D_CASES + KFC_3D_CASES,
     ids=KFC_1D_IDS + KFC_2D_IDS + KFC_3D_IDS,
 )
 @mark.parametrize("device", DEVICES, ids=DEVICE_IDS)
-def test_einsum_expression(case: Dict, device: torch.device):
+def test_einsum_expression(case: Dict, device: torch.device, simplify: bool):
     """Compare einsum expression of KFC with implementation via ``unfoldNd``.
 
     Args:
         case: Dictionary describing the test case.
         device: Device to execute the test on.
+        simplify: Whether to simplify the einsum expression.
     """
     seed = case["seed"]
     input_fn = case["input_fn"]
@@ -49,7 +51,9 @@ def test_einsum_expression(case: Dict, device: torch.device):
     unfolded_x = rearrange(unfolded_x, "n (g c_in_k) ... -> n g c_in_k ...", g=groups)
     kfc_unfold = einsum("ngik,ngjk->gij", unfolded_x, unfolded_x) / batch_size
 
-    equation, operands, shape = convNd_kfc.einsum_expression(x, kernel_size, **kwargs)
+    equation, operands, shape = convNd_kfc.einsum_expression(
+        x, kernel_size, **kwargs, simplify=simplify
+    )
     kfc_einconv = einsum(equation, *operands).reshape(shape)
 
     report_nonclose(kfc_unfold, kfc_einconv, rtol=5e-5)

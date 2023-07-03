@@ -16,6 +16,7 @@ class UnfoldNd(Module):
         dilation: Union[int, Tuple[int, ...]] = 1,
         padding: Union[int, Tuple[int, ...]] = 0,
         stride: Union[int, Tuple[int, ...]] = 1,
+        simplify: bool = True,
     ):
         """Extracts sliding local blocks from a batched input tensor (``im2col``).
 
@@ -33,6 +34,7 @@ class UnfoldNd(Module):
                 Default: ``0``. Allowed strings are ``'same'`` and ``'valid'``.
             stride: Stride of the convolution. Can be a single integer (shared along all
                 spatial dimensions), or an ``N``-tuple of integers. Default: ``1``.
+            simplify: Whether to use a simplified einsum expression. Default: ``True``.
         """
         super().__init__()
 
@@ -40,6 +42,7 @@ class UnfoldNd(Module):
         self._dilation = dilation
         self._padding = padding
         self._stride = stride
+        self._simplify = simplify
 
     def forward(self, x: Tensor) -> Tensor:
         """Compute the unfolded input.
@@ -62,4 +65,5 @@ class UnfoldNd(Module):
             dilation=self._dilation,
             padding=self._padding,
             stride=self._stride,
+            simplify=self._simplify,
         )

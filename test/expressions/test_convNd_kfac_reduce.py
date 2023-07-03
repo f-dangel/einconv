@@ -8,7 +8,7 @@ from test.expressions.convNd_kfac_reduce_cases import (
     KFAC_REDUCE_3D_CASES,
     KFAC_REDUCE_3D_IDS,
 )
-from test.utils import DEVICE_IDS, DEVICES, report_nonclose
+from test.utils import DEVICE_IDS, DEVICES, SIMPLIFIES, SIMPLIFY_IDS, report_nonclose
 from typing import Dict
 
 import torch
@@ -20,18 +20,20 @@ from torch import einsum
 from einconv.expressions import convNd_kfac_reduce
 
 
+@mark.parametrize("simplify", SIMPLIFIES, ids=SIMPLIFY_IDS)
 @mark.parametrize(
     "case",
     KFAC_REDUCE_1D_CASES + KFAC_REDUCE_2D_CASES + KFAC_REDUCE_3D_CASES,
     ids=KFAC_REDUCE_1D_IDS + KFAC_REDUCE_2D_IDS + KFAC_REDUCE_3D_IDS,
 )
 @mark.parametrize("device", DEVICES, ids=DEVICE_IDS)
-def test_einsum_expression(case: Dict, device: torch.device):
+def test_einsum_expression(case: Dict, device: torch.device, simplify: bool):
     """Compare einsum expression of KFAC reduce with implementation via ``unfoldNd``.
 
     Args:
         case: Dictionary describing the test case.
         device: Device to execute the test on.
+        simplify: Whether to simplify the einsum expression.
     """
     seed = case["seed"]
     input_fn = case["input_fn"]
@@ -51,7 +53,7 @@ def test_einsum_expression(case: Dict, device: torch.device):
     kfac_unfold = einsum("ngi,ngj->gij", avg_unfolded_x, avg_unfolded_x) / (batch_size)
 
     equation, operands, shape = convNd_kfac_reduce.einsum_expression(
-        x, kernel_size, **kwargs
+        x, kernel_size, **kwargs, simplify=simplify
     )
     kfac_einconv = einsum(equation, *operands).reshape(shape)
 

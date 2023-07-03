@@ -12,6 +12,7 @@ def unfoldNd(
     dilation: Union[int, Tuple[int, ...]] = 1,
     padding: Union[int, Tuple[int, ...], str] = 0,
     stride: Union[int, Tuple[int, ...]] = 1,
+    simplify: bool = True,
 ) -> Tensor:
     """Torch functional for N-dimensional input unfolding that uses einsum.
 
@@ -33,6 +34,7 @@ def unfoldNd(
             Default: ``0``. Allowed strings are ``'same'`` and ``'valid'``.
         stride: Stride of the convolution. Can be a single integer (shared along all
             spatial dimensions), or an ``N``-tuple of integers. Default: ``1``.
+        simplify: Whether to use a simplified einsum expression. Default: ``True``.
 
     Returns:
         Unfolded input. Has shape \
@@ -43,6 +45,11 @@ def unfoldNd(
         ``n (c_in k1 k2 ...) (o1 o2 ...)``.
     """
     equation, operands, shape = convNd_unfold.einsum_expression(
-        x, kernel_size, stride=stride, padding=padding, dilation=dilation
+        x,
+        kernel_size,
+        stride=stride,
+        padding=padding,
+        dilation=dilation,
+        simplify=simplify,
     )
     return einsum(equation, *operands).reshape(shape)
