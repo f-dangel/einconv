@@ -30,6 +30,7 @@ class ConvNd(Module):
         padding_mode: str = "zeros",
         device: Union[None, torch.device] = None,
         dtype: Union[None, torch.dtype] = None,
+        simplify: bool = True,
     ) -> None:
         """Initialize N-dimensional convolution layer.
 
@@ -58,6 +59,7 @@ class ConvNd(Module):
                 are supported at the moment.
             device: Device on which the module is initialized.
             dtype: Data type assumed by the module.
+            simplify: Whether to use a simplified einsum expression. Default: ``True``.
 
         Raises:
             NotImplementedError: For unsupported padding modes.
@@ -84,6 +86,7 @@ class ConvNd(Module):
         self.N = N
         self.in_channels = in_channels
         self.out_channels = out_channels
+        self.simplify = simplify
 
         # standardize into N-tuple form if possible
         self.kernel_size = _tuple(kernel_size, N)
@@ -109,11 +112,14 @@ class ConvNd(Module):
         self.reset_parameters()
 
     @classmethod
-    def from_nn_Conv(cls, conv_module: Union[Conv1d, Conv2d, Conv3d]) -> ConvNd:
+    def from_nn_Conv(
+        cls, conv_module: Union[Conv1d, Conv2d, Conv3d], simplify: bool = True
+    ) -> ConvNd:
         """Convert a ``torch.nn.Conv{1,2,3}d`` module to a ``ConvNd`` layer.
 
         Args:
             conv_module: Convolution module.
+            simplify: Whether to use a simplified einsum expression. Default: ``True``.
 
         Returns:
             Converted ConvNd module.
@@ -132,6 +138,7 @@ class ConvNd(Module):
             padding_mode=conv_module.padding_mode,
             device=conv_module.weight.device,
             dtype=conv_module.weight.dtype,
+            simplify=simplify,
         )
         sync_parameters(conv_module, einconv_module)
 
@@ -171,6 +178,7 @@ class ConvNd(Module):
             padding=self.padding,
             dilation=self.dilation,
             groups=self.groups,
+            simplify=self.simplify,
         )
 
     def extra_repr(self) -> str:
@@ -193,4 +201,6 @@ class ConvNd(Module):
             s += ", bias=False"
         if self.padding_mode != "zeros":
             s += ", padding_mode={padding_mode}"
+        if self.simplify is False:
+            s += ", simplify=False"
         return s.format(**self.__dict__)

@@ -366,7 +366,11 @@ def conv_module_from_case(
 
 
 def convNd_module_from_case(
-    N: int, case: Dict, device: torch.device, dtype: Union[torch.dtype, None] = None
+    N: int,
+    case: Dict,
+    device: torch.device,
+    dtype: Union[torch.dtype, None] = None,
+    simplify: bool = True,
 ) -> ConvNd:
     """Create einconv convolution module from a case.
 
@@ -375,6 +379,7 @@ def convNd_module_from_case(
         case: Dictionary describing the module.
         device: Device to load the module to.
         dtype: Data type assumed by the layer. Default: ``None`` (``torch.float32``).
+        simplify: Whether to use a simplified einsum expression. Default: ``True``.
 
     Returns:
         einconv convolution module.
@@ -387,4 +392,5 @@ def convNd_module_from_case(
         **case["kwargs"],
         device=device,
         dtype=dtype,
+        simplify=simplify,
     )
