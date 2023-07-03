@@ -16,6 +16,7 @@ def convNd(
     padding: Union[int, str, Tuple[int, ...]] = 0,
     dilation: Union[int, Tuple[int, ...]] = 1,
     groups: int = 1,
+    simplify: bool = True,
 ) -> Tensor:
     """Generalization of ``torch.nn.functional.conv{1,2,3}d`` to ``N``d.
 
@@ -39,6 +40,7 @@ def convNd(
         dilation: Dilation of the convolution. Can be a single integer (shared along
             all spatial dimensions), or an ``N``-tuple of integers. Default: ``1``.
         groups: In how many groups to split the input channels. Default: ``1``.
+        simplify: Whether to use a simplified einsum expression. Default: ``True``.
 
     Returns:
         Result of the convolution. Has shape \
@@ -48,7 +50,13 @@ def convNd(
     """
     _check_args(x, weight, bias=bias, groups=groups)
     equation, operands, shape = convNd_forward.einsum_expression(
-        x, weight, stride=stride, padding=padding, dilation=dilation, groups=groups
+        x,
+        weight,
+        stride=stride,
+        padding=padding,
+        dilation=dilation,
+        groups=groups,
+        simplify=simplify,
     )
     output = einsum(equation, *operands).reshape(shape)
 
