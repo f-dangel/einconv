@@ -3,9 +3,8 @@
 This package offers `einsum`-based implementations of convolutions and related
 operations in PyTorch.
 
-**Disclaimer:** The package name is inspired by
-[this](https://github.com/pfnet-research/einconv) Github repository which
-represented the starting point for our work.
+Its name is inspired by [this](https://github.com/pfnet-research/einconv) Github
+repository which represented the starting point for our work.
 
 ## Installation
 Install from PyPI via `pip`
@@ -14,12 +13,12 @@ Install from PyPI via `pip`
 pip install einconv
 ```
 
-## Example
+## Examples
 
-Try running the [basic
-example](https://github.com/f-dangel/einconv/blob/master/docs/tutorials/basic_conv2d.py).
+- [Basic
+  example](https://github.com/f-dangel/einconv/blob/master/docs/tutorials/basic_conv2d.py)
 
-More tutorials are [TODO here]().
+- Coming soon: More tutorials.
 
 ## Features & Usage
 
@@ -58,30 +57,38 @@ shape) for the following operations:
 - Forward pass of `N`-dimensional convolution
 - Backward pass (input and weight VJPs) of `N`-dimensional convolution
 - Input unfolding (`im2col/unfold`) for inputs of `N`-dimensional convolution
+- Input-based Kronecker factors of Fisher approximations for convolutions (KFC
+  and KFAC-reduce)
 
-These can then be evaluated with `einsum`:
+These can then be evaluated with `einsum`. For instance, the `einsum` expression
+for the forward pass of an `N`-dimensional convolution is
+
 ```py
 from torch import einsum
-from einconv.expressions import conv_forward
+from einconv.expressions import convNd_forward
 
-equation, operands, final_shape = conv_forward.einsum_expression(...)
-result = einsum(equation, *operands).reshape(final_shape)
+equation, operands, shape = convNd_forward.einsum_expression(...)
+result = einsum(equation, *operands).reshape(shape)
 ```
+
+All expressions follow this pattern.
 
 ### Symbolic Simplification
 
-Some operations (e.g. dense convolutions) can be optimized via symbolic simplifications:
+Some operations (e.g. dense convolutions) can be optimized via symbolic
+simplifications. This is turned on by default as it generally improves
+performance. You can also generate a non-optimized expression and simplify it:
+
 ```py
 from einconv import simplify
-from torch import allclose
 
-equation_opt, operands_opt = simplify(equation, operands)
-# alternatively:
-# equation_opt, operands_opt, shape = conv_forward.einsum_expression(..., simplify=True)
-result_opt = einsum(equation_opt, *operands_opt).reshape(shape)
-
-allclose(result, result_opt) # True
+equation, operands, shape = convNd_forward.einsum_expression(..., simplify=False)
+equation, operands = simplify(equation, operands)
+result = einsum(equation, *operands).reshape(shape)
 ```
+
+Sometimes it might be better to inspect the non-simplified expression to see how
+indices relate to operands.
 
 ## Citation
 
@@ -99,4 +106,11 @@ the accompanying article
 ```
 ## Limitations
 
-Under preparation
+- Currently, none of the underlying operations (computation of index pattern
+  tensors, generation of einsum equations and shapes, simplification) is cached.
+  This consumes additional time, although it should usually take much less time
+  than evaluating an expression via `einsum`.
+
+- At the moment, the code to perform expression simplifications is coupled with
+  PyTorch. I am planning to address this in the future by switching the
+  implementation to a symbolic approach which will also allow efficient caching.
