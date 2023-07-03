@@ -75,10 +75,10 @@ Some operations (e.g. dense convolutions) can be optimized via symbolic simplifi
 from einconv import simplify
 from torch import allclose
 
-equation_opt, operands_opt, final_shape = simplify(equation, operands)
+equation_opt, operands_opt = simplify(equation, operands)
 # alternatively:
-# equation_opt, operands_opt, final_shape = conv_forward.einsum_expression(..., simplify=True)
-result_opt = einsum(equation_opt, *operands_opt).reshape(final_shape)
+# equation_opt, operands_opt, shape = conv_forward.einsum_expression(..., simplify=True)
+result_opt = einsum(equation_opt, *operands_opt).reshape(shape)
 
 allclose(result, result_opt) # True
 ```

@@ -8,7 +8,7 @@ from test.expressions.convNd_weight_vjp_cases import (
     WEIGHT_VJP_3D_CASES,
     WEIGHT_VJP_3D_IDS,
 )
-from test.utils import DEVICE_IDS, DEVICES, report_nonclose
+from test.utils import DEVICE_IDS, DEVICES, SIMPLIFIES, SIMPLIFY_IDS, report_nonclose
 from typing import Dict
 
 from pytest import mark
@@ -19,18 +19,20 @@ from torch.nn.functional import conv1d, conv2d, conv3d
 from einconv.expressions import convNd_weight_vjp
 
 
+@mark.parametrize("simplify", SIMPLIFIES, ids=SIMPLIFY_IDS)
 @mark.parametrize("device", DEVICES, ids=DEVICE_IDS)
 @mark.parametrize(
     "case",
     WEIGHT_VJP_1D_CASES + WEIGHT_VJP_2D_CASES + WEIGHT_VJP_3D_CASES,
     ids=WEIGHT_VJP_1D_IDS + WEIGHT_VJP_2D_IDS + WEIGHT_VJP_3D_IDS,
 )
-def test_einsum_expression(case: Dict, device: device):
+def test_einsum_expression(case: Dict, device: device, simplify: bool):
     """Compare weight JVP of autograd with einsum expression.
 
     Args:
         case: Dictionary describing the module.
         device: Device to load the module to.
+        simplify: Whether to simplify the einsum expression.
     """
     manual_seed(case["seed"])
     kwargs = case["kwargs"]
@@ -46,7 +48,7 @@ def test_einsum_expression(case: Dict, device: device):
 
     kernel_size = weight.shape[2:]
     equation, operands, shape = convNd_weight_vjp.einsum_expression(
-        x, v, kernel_size, **kwargs
+        x, v, kernel_size, **kwargs, simplify=simplify
     )
     ein_weight_vjp = einsum(equation, *operands).reshape(shape)
 

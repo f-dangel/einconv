@@ -6,6 +6,7 @@ from einops import rearrange
 from torch import Tensor
 from torch.nn import Parameter
 
+import einconv
 from einconv.expressions.utils import create_conv_index_patterns, translate_to_torch
 from einconv.utils import _tuple
 
@@ -18,6 +19,7 @@ def einsum_expression(
     padding: Union[int, Tuple[int, ...]] = 0,
     dilation: Union[int, Tuple[int, ...]] = 1,
     groups: int = 1,
+    simplify: bool = True,
 ) -> Tuple[str, List[Union[Tensor, Parameter]], Tuple[int, ...]]:
     """Generate einsum expression of a convolution's input VJP.
 
@@ -38,6 +40,7 @@ def einsum_expression(
         dilation: Dilation of the convolution. Can be a single integer (shared along
             all spatial dimensions), or an ``N``-tuple of integers. Default: ``1``.
         groups: In how many groups to split the input channels. Default: ``1``.
+        simplify: Whether to simplify the einsum expression. Default: ``True``.
 
     Returns:
         Einsum equation
@@ -77,5 +80,8 @@ def einsum_expression(
     group_in_channels = weight.shape[1]
     t_input_size = _tuple(input_size, N)
     shape = (batch_size, groups * group_in_channels, *t_input_size)
+
+    if simplify:
+        equation, operands = einconv.simplify(equation, operands)
 
     return equation, operands, shape

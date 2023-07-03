@@ -2,6 +2,7 @@ from typing import List, Tuple, Union
 
 from torch import Tensor
 
+import einconv
 from einconv.expressions.utils import create_conv_index_patterns, translate_to_torch
 from einconv.utils import _tuple
 
@@ -12,6 +13,7 @@ def einsum_expression(
     stride: Union[int, Tuple[int, ...]] = 1,
     padding: Union[str, int, Tuple[int, ...]] = 0,
     dilation: Union[int, Tuple[int, ...]] = 1,
+    simplify: bool = True,
 ) -> Tuple[str, List[Tensor], Tuple[int, ...]]:
     """Generate einsum expression to unfold the input of a convolution.
 
@@ -27,6 +29,7 @@ def einsum_expression(
             Default: ``0``. Allowed strings are ``'same'`` and ``'valid'``.
         dilation: Dilation of the convolution. Can be a single integer (shared along
             all spatial dimensions), or an ``N``-tuple of integers. Default: ``1``.
+        simplify: Whether to simplify the einsum expression. Default: ``True``.
 
     Returns:
         Einsum equation
@@ -69,5 +72,8 @@ def einsum_expression(
     kernel_tot_size = int(Tensor(t_kernel_size).int().prod())
     batch_size, in_channels = x.shape[:2]
     shape = (batch_size, in_channels * kernel_tot_size, output_tot_size)
+
+    if simplify:
+        equation, operands = einconv.simplify(equation, operands)
 
     return equation, operands, shape

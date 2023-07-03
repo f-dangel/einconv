@@ -90,3 +90,6 @@ def make_id(case: Dict) -> str:
 
 DTYPES = [torch.bool, torch.float32, torch.int32]
 DTYPE_IDS = [f"dtype={dt}" for dt in DTYPES]
+
+SIMPLIFIES = [False, True]
+SIMPLIFY_IDS = [f"simplify={simplify}" for simplify in SIMPLIFIES]
