@@ -6,8 +6,8 @@ from einops import rearrange
 from torch import Tensor
 from torch.nn import Parameter
 
-from einconv.expressions.utils import create_conv_index_patterns
-from einconv.utils import _tuple, get_letters
+from einconv.expressions.utils import create_conv_index_patterns, translate_to_torch
+from einconv.utils import _tuple
 
 
 def einsum_expression(
@@ -126,43 +126,12 @@ def _equation(N: int) -> str:
         Einsum equation for the input VJP of N-dimensional convolution. Operand \
         order is un-grouped vector, patterns, un-grouped weight.
     """
-    v_str = ""
-    output_str = ""
-    pattern_strs: List[str] = []
-    weight_str = ""
+    v_str = "n g c_out " + " ".join([f"o{i}" for i in range(N)])
+    pattern_strs: List[str] = [f"k{i} o{i} i{i}" for i in range(N)]
+    weight_str = "g c_out c_in " + " ".join([f"k{i}" for i in range(N)])
+    lhs = ",".join([v_str, *pattern_strs, weight_str])
 
-    # requires 4 + 3 * N letters
-    letters = get_letters(4 + 3 * N)
+    rhs = "n g c_in " + " ".join([f"i{i}" for i in range(N)])
 
-    # batch dimension
-    batch_letter = letters.pop()
-    v_str += batch_letter
-    output_str += batch_letter
-
-    # group dimension
-    group_letter = letters.pop()
-    v_str += group_letter
-    output_str += group_letter
-    weight_str += group_letter
-
-    # input and output channel dimensions
-    in_channel_letter = letters.pop()
-    out_channel_letter = letters.pop()
-    v_str += out_channel_letter
-    output_str += in_channel_letter
-    weight_str += out_channel_letter + in_channel_letter
-
-    # coupling of input, output via kernel
-    for _ in range(N):
-        input_letter = letters.pop()
-        kernel_letter = letters.pop()
-        output_letter = letters.pop()
-
-        v_str += output_letter
-        output_str += input_letter
-        weight_str += kernel_letter
-        pattern_strs.append(kernel_letter + output_letter + input_letter)
-
-    input_equation = ",".join([v_str] + pattern_strs + [weight_str])
-
-    return "->".join([input_equation, output_str])
+    equation = "->".join([lhs, rhs])
+    return translate_to_torch(equation)

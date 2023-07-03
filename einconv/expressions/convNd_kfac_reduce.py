@@ -11,8 +11,8 @@ from typing import List, Tuple, Union
 from einops import rearrange
 from torch import Tensor
 
-from einconv.expressions.utils import create_conv_index_patterns
-from einconv.utils import _tuple, get_letters
+from einconv.expressions.utils import create_conv_index_patterns, translate_to_torch
+from einconv.utils import _tuple
 
 
 def einsum_expression(
@@ -116,7 +116,8 @@ def _operands_and_shape(
 def _equation(N: int) -> str:
     """Generate einsum equation for KFAC reduce factor.
 
-    The arguments are ``input, *index_patterns, *index_patterns, input -> output``.
+    The arguments are
+    ``input, *index_patterns, *index_patterns, input, scale -> output``.
 
     Args:
         N: Convolution dimension.
@@ -124,60 +125,19 @@ def _equation(N: int) -> str:
     Returns:
         Einsum equation for KFAC reduce factor of N-dimensional convolution.
     """
-    x1_str = ""
-    pattern1_strs: List[str] = []
-    x2_str = ""
-    pattern2_strs: List[str] = []
-    output_str = ""
+    x1_str = "n g c_in " + " ".join([f"i{i}" for i in range(N)])
+    x2_str = "n g c_in_ " + " ".join([f"i{i}_" for i in range(N)])
+    pattern1_strs: List[str] = [f"k{i} o{i} i{i}" for i in range(N)]
+    pattern2_strs: List[str] = [f"k{i}_ o{i}_ i{i}_" for i in range(N)]
+    scale_str = "s"
+    lhs = ",".join([x1_str, *pattern1_strs, *pattern2_strs, x2_str, scale_str])
 
-    # requires 5 + 6 * N letters
-    letters = get_letters(5 + 6 * N)
-
-    # batch dimension
-    batch_letter = letters.pop()
-    x1_str += batch_letter
-    x2_str += batch_letter
-
-    # group dimension
-    group_letter = letters.pop()
-    x1_str += group_letter
-    x2_str += group_letter
-    output_str += group_letter
-
-    # input channel dimension for first input
-    in_channel_letter = letters.pop()
-    x1_str += in_channel_letter
-    output_str += in_channel_letter
-
-    # coupling of first input and index pattern
-    for _ in range(N):
-        input_letter = letters.pop()
-        kernel_letter = letters.pop()
-        output_letter = letters.pop()
-
-        x1_str += input_letter
-        output_str += kernel_letter
-        pattern1_strs.append(kernel_letter + output_letter + input_letter)
-
-    # input channel dimension for second input
-    in_channel_letter = letters.pop()
-    x2_str += in_channel_letter
-    output_str += in_channel_letter
-
-    # coupling of second input and index pattern
-    for _ in range(N):
-        input_letter = letters.pop()
-        kernel_letter = letters.pop()
-        output_letter = letters.pop()
-
-        x2_str += input_letter
-        output_str += kernel_letter
-        pattern2_strs.append(kernel_letter + output_letter + input_letter)
-
-    scale_str = letters.pop()
-
-    input_equation = ",".join(
-        [x1_str] + pattern1_strs + pattern2_strs + [x2_str, scale_str]
+    rhs = (
+        "g c_in "
+        + " ".join([f"k{i}" for i in range(N)])
+        + " c_in_ "
+        + " ".join([f"k{i}_" for i in range(N)])
     )
 
-    return "->".join([input_equation, output_str])
+    equation = "->".join([lhs, rhs])
+    return translate_to_torch(equation)

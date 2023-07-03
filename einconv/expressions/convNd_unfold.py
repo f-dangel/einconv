@@ -2,8 +2,8 @@ from typing import List, Tuple, Union
 
 from torch import Tensor
 
-from einconv.expressions.utils import create_conv_index_patterns
-from einconv.utils import _tuple, get_letters
+from einconv.expressions.utils import create_conv_index_patterns, translate_to_torch
+from einconv.utils import _tuple
 
 
 def einsum_expression(
@@ -101,36 +101,16 @@ def _equation(N: int) -> str:
     Returns:
         Einsum equation for N-dimensional convolution.
     """
-    input_str = ""
-    output_str = ""
-    pattern_strs: List[str] = []
+    x_str = "n c_in " + " ".join([f"i{i}" for i in range(N)])
+    pattern_strs: List[str] = [f"k{i} o{i} i{i}" for i in range(N)]
+    lhs = ",".join([x_str, *pattern_strs])
 
-    # requires 2 + 3 * N letters
-    letters = get_letters(2 + 3 * N)
+    rhs = (
+        "n c_in "
+        + " ".join([f"k{i}" for i in range(N)])
+        + " "
+        + " ".join([f"o{i}" for i in range(N)])
+    )
 
-    # batch dimension
-    batch_letter = letters.pop()
-    input_str += batch_letter
-    output_str += batch_letter
-
-    # input channel dimension
-    in_channel_letter = letters.pop()
-    input_str += in_channel_letter
-    output_str += in_channel_letter
-
-    # coupling of input and index pattern
-    for _ in range(N):
-        input_letter = letters.pop()
-        kernel_letter = letters.pop()
-        output_letter = letters.pop()
-
-        input_str += input_letter
-        output_str += kernel_letter
-        pattern_strs.append(kernel_letter + output_letter + input_letter)
-
-    for n in range(N):
-        output_str += pattern_strs[n][1]
-
-    input_equation = ",".join([input_str] + pattern_strs)
-
-    return "->".join([input_equation, output_str])
+    equation = "->".join([lhs, rhs])
+    return translate_to_torch(equation)
