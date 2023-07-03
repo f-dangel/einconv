@@ -6,7 +6,7 @@ from einops import rearrange
 from torch import Tensor
 from torch.nn import Parameter
 
-from einconv import index_pattern
+from einconv.expressions.utils import create_conv_index_patterns
 from einconv.utils import _tuple, get_letters
 
 
@@ -92,34 +92,25 @@ def _operands_and_shape(
         un-grouped weight.
         Output shape
     """
-    # convert into tuple format
     N = weight.dim() - 2
     kernel_size = weight.shape[2:]
-    t_input_size: Tuple[int, ...] = _tuple(input_size, N)
-    t_dilation: Tuple[int, ...] = _tuple(dilation, N)
-    t_padding: Union[Tuple[int, ...], str] = (
-        padding if isinstance(padding, str) else _tuple(padding, N)
+    patterns = create_conv_index_patterns(
+        N,
+        input_size,
+        kernel_size,
+        stride=stride,
+        padding=padding,
+        dilation=dilation,
+        device=weight.device,
+        dtype=weight.dtype,
     )
-    t_stride: Tuple[int, ...] = _tuple(stride, N)
-
-    patterns: List[Tensor] = [
-        index_pattern(
-            t_input_size[n],
-            kernel_size[n],
-            stride=t_stride[n],
-            padding=t_padding if isinstance(t_padding, str) else t_padding[n],
-            dilation=t_dilation[n],
-            device=weight.device,
-            dtype=weight.dtype,
-        )
-        for n in range(N)
-    ]
     v_ungrouped = rearrange(v, "n (g c_out) ... -> n g c_out ...", g=groups)
     weight_ungrouped = rearrange(weight, "(g c_out) ... -> g c_out ...", g=groups)
     operands = [v_ungrouped, *patterns, weight_ungrouped]
 
     batch_size = v.shape[0]
     group_in_channels = weight.shape[1]
+    t_input_size = _tuple(input_size, N)
     shape = (batch_size, groups * group_in_channels, *t_input_size)
 
     return operands, shape

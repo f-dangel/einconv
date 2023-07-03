@@ -12,6 +12,7 @@ from einops import rearrange
 from torch import Tensor
 
 from einconv import index_pattern
+from einconv.expressions.utils import create_conv_index_patterns
 from einconv.utils import _tuple, get_letters
 
 
@@ -83,33 +84,24 @@ def _operands_and_shape(
         un-grouped input, patterns, normalization scaling.
         Output shape
     """
-    # convert into tuple format
     N = x.dim() - 2
-    input_sizes = x.shape[2:]
-    t_kernel_size: Tuple[int, ...] = _tuple(kernel_size, N)
-    t_dilation: Tuple[int, ...] = _tuple(dilation, N)
-    t_padding: Union[Tuple[int, ...], str] = (
-        padding if isinstance(padding, str) else _tuple(padding, N)
+    input_size = x.shape[2:]
+    patterns = create_conv_index_patterns(
+        N,
+        input_size,
+        kernel_size,
+        stride=stride,
+        padding=padding,
+        dilation=dilation,
+        device=x.device,
+        dtype=x.dtype,
     )
-    t_stride: Tuple[int, ...] = _tuple(stride, N)
-
-    patterns: List[Tensor] = [
-        index_pattern(
-            input_sizes[n],
-            t_kernel_size[n],
-            stride=t_stride[n],
-            padding=t_padding if isinstance(t_padding, str) else t_padding[n],
-            dilation=t_dilation[n],
-            device=x.device,
-            dtype=x.dtype,
-        )
-        for n in range(N)
-    ]
     x_ungrouped = rearrange(x, "n (g c_in) ... -> n g c_in ...", g=groups)
     batch_size = x.shape[0]
     scale = Tensor([1.0 / batch_size]).to(x.device).to(x.dtype)
     operands = [x_ungrouped, *patterns, *patterns, x_ungrouped, scale]
 
+    t_kernel_size = _tuple(kernel_size, N)
     kernel_tot_sizes = int(Tensor(t_kernel_size).int().prod())
     in_channels = x.shape[1]
     shape = (

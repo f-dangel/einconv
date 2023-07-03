@@ -7,6 +7,7 @@ from torch import Tensor
 from torch.nn import Parameter
 
 from einconv import index_pattern
+from einconv.expressions.utils import create_conv_index_patterns
 from einconv.utils import _tuple, get_letters
 
 
@@ -78,29 +79,19 @@ def _operands_and_shape(
         un-grouped weight.
         Output shape.
     """
-    input_size = tuple(x.shape[2:])
-    kernel_size = tuple(weight.shape[2:])
-
-    # convert into tuple format
     N = x.dim() - 2
-    t_stride: Tuple[int, ...] = _tuple(stride, N)
-    t_padding: Union[Tuple[int, ...], str] = (
-        padding if isinstance(padding, str) else _tuple(padding, N)
+    input_size = x.shape[2:]
+    kernel_size = weight.shape[2:]
+    patterns = create_conv_index_patterns(
+        N,
+        input_size,
+        kernel_size,
+        stride=stride,
+        padding=padding,
+        dilation=dilation,
+        device=weight.device,
+        dtype=weight.dtype,
     )
-    t_dilation: Tuple[int, ...] = _tuple(dilation, N)
-
-    patterns = [
-        index_pattern(
-            input_size[n],
-            kernel_size[n],
-            stride=t_stride[n],
-            padding=padding if isinstance(padding, str) else t_padding[n],
-            dilation=t_dilation[n],
-            device=x.device,
-            dtype=x.dtype,
-        )
-        for n in range(N)
-    ]
     x_ungrouped = rearrange(x, "n (g c_in) ... -> n g c_in ...", g=groups)
     weight_ungrouped = rearrange(weight, "(g c_out) ... -> g c_out ...", g=groups)
     operands = [x_ungrouped, *patterns, weight_ungrouped]
