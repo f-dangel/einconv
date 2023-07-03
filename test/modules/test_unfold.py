@@ -41,6 +41,5 @@ def test_UnfoldNd(case: Dict, device: torch.device):
 
     result_unfold = unfoldNd.UnfoldNd(kernel_size, **kwargs).to(device)(inputs)
     result_einconv = modules.UnfoldNd(kernel_size, **kwargs).to(device)(inputs)
-    print(result_unfold.shape, result_einconv.shape)
 
     report_nonclose(result_unfold, result_einconv)
