@@ -114,7 +114,7 @@ def _equation(N: int) -> str:
     """
     x_str = "n g c_in " + " ".join([f"i{i}" for i in range(N)])
     pattern_strs: List[str] = [f"k{i} o{i} i{i}" for i in range(N)]
-    weight_str = "g c_out c_in " " ".join([f"k{i}" for i in range(N)])
+    weight_str = "g c_out c_in " + " ".join([f"k{i}" for i in range(N)])
     lhs = ",".join([x_str, *pattern_strs, weight_str])
 
     rhs = "n g c_out " + " ".join([f"o{i}" for i in range(N)])
