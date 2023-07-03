@@ -10,7 +10,7 @@ from torch.nn import Parameter
 
 from einconv import index_pattern
 from einconv.expressions.utils import get_letters
-from einconv.utils import cpu
+from einconv.utils import cpu, get_conv_paddings
 
 
 class Identity:
@@ -201,7 +201,18 @@ class TensorNetwork:
                     P = hyperparams["padding"]
                     D = hyperparams["dilation"]
 
-                    if S > K and P == 0 and D == 1 and I % S == 0:
+                    is_downsampling = False
+                    # for string-valued padding, we currently only support cases where
+                    # left and right padding coincide
+                    if isinstance(P, str):
+                        P_left, P_right = get_conv_paddings(K, S, P, D)
+                        if P_left == P_right:
+                            P = P_left
+                            is_downsampling = S > K and P == 0 and D == 1 and I % S == 0
+                    else:
+                        is_downsampling = S > K and P == 0 and D == 1 and I % S == 0
+
+                    if is_downsampling:
                         _, _, i_idx = self.input_indices[pos]
                         if i_idx not in self.output_indices:
                             positions.append(pos)
@@ -243,12 +254,28 @@ class TensorNetwork:
             P = hyperparams["padding"]
             D = hyperparams["dilation"]
 
-            return (
-                (I + 2 * P - (K + (K - 1) * (D - 1))) % S == 0
-                and K == S
-                and P == 0
-                and D == 1
-            )
+            is_dense = False
+            # for string-valued padding, we currently only support cases where
+            # left and right padding coincide
+            if isinstance(P, str):
+                P_left, P_right = get_conv_paddings(K, S, P, D)
+                if P_left == P_right:
+                    P = P_left
+                    is_dense = (
+                        (I + 2 * P - (K + (K - 1) * (D - 1))) % S == 0
+                        and K == S
+                        and P == 0
+                        and D == 1
+                    )
+            else:
+                is_dense = (
+                    (I + 2 * P - (K + (K - 1) * (D - 1))) % S == 0
+                    and K == S
+                    and P == 0
+                    and D == 1
+                )
+
+            return is_dense
 
         while any(is_dense_pattern(op) for op in self.operands):
             idx = [is_dense_pattern(op) for op in self.operands].index(True)
