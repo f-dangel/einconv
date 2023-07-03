@@ -6,9 +6,8 @@ from einops import rearrange
 from torch import Tensor
 from torch.nn import Parameter
 
-from einconv import index_pattern
 from einconv.expressions.utils import create_conv_index_patterns
-from einconv.utils import _tuple, get_letters
+from einconv.utils import get_letters
 
 
 def einsum_expression(

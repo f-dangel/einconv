@@ -5,7 +5,6 @@ from typing import List, Tuple, Union
 from einops import rearrange
 from torch import Tensor
 
-from einconv import index_pattern
 from einconv.expressions.utils import create_conv_index_patterns
 from einconv.utils import _tuple, get_letters
 
