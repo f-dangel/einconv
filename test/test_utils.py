@@ -7,7 +7,7 @@ from pytest import mark
 from torch import zeros
 from torch.nn.functional import conv1d
 
-from einconv.utils import get_conv_output_size, get_letters
+from einconv.utils import get_conv_output_size
 
 
 @mark.parametrize("case", OUTPUT_SIZE_CASES, ids=OUTPUT_SIZE_IDS)
@@ -30,13 +30,3 @@ def test_get_conv_output_size(case: Dict):
     output_size = get_conv_output_size(**case)
 
     assert output_size_torch == output_size
-
-
-def test_get_letters():
-    """Test get_letters function."""
-    blocked = {"a", "o"}
-    num_letters = 24
-    letters = get_letters(num_letters, blocked=blocked)
-
-    assert len(letters) == num_letters
-    assert all(b not in letters for b in blocked)

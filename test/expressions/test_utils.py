@@ -1,7 +1,17 @@
 """Tests ``einconv.expressions.utils``."""
 
 
-from einconv.expressions.utils import translate_to_torch
+from einconv.expressions.utils import get_letters, translate_to_torch
+
+
+def test_get_letters():
+    """Test get_letters function."""
+    blocked = {"a", "o"}
+    num_letters = 24
+    letters = get_letters(num_letters, blocked=blocked)
+
+    assert len(letters) == num_letters
+    assert all(b not in letters for b in blocked)
 
 
 def test_translate_to_torch():

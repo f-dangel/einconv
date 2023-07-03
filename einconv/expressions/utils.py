@@ -1,12 +1,12 @@
 """Utility functions for creating einsum expressions."""
 
-from typing import List, Tuple, Union
+from typing import List, Optional, Set, Tuple, Union
 
 import torch
 from torch import Tensor
 
 from einconv import index_pattern
-from einconv.utils import _tuple, cpu, get_letters
+from einconv.utils import _tuple, cpu
 
 
 def create_conv_index_patterns(
@@ -109,3 +109,37 @@ def translate_to_torch(einops_equation: str) -> str:
 
     # clean white spaces
     return torch_equation.replace(" ", "")
+
+
+def get_letters(num_letters: int, blocked: Optional[Set] = None) -> List[str]:
+    """Return a list of ``num_letters`` unique letters for an einsum equation.
+
+    Args:
+        num_letters: Number of letters to return.
+        blocked: Set of letters that should not be used.
+
+    Returns:
+        List of ``num_letters`` unique letters.
+
+    Raises:
+        ValueError: If ``num_letters`` cannot be satisfies with einsum-supported
+            letters.
+    """
+    if num_letters == 0:
+        return []
+
+    max_letters = 26
+    blocked = set() if blocked is None else blocked
+    letters = []
+
+    for i in range(max_letters):
+        letter = chr(ord("a") + i)
+        if letter not in blocked:
+            letters.append(letter)
+            if len(letters) == num_letters:
+                return letters
+
+    raise ValueError(
+        f"Ran out of letters. PyTorch's einsum supports {max_letters} letters."
+        + f" Requested {num_letters}, blocked: {len(blocked)}.)"
+    )
