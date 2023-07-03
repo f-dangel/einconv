@@ -5,7 +5,7 @@ from typing import List, Tuple, Union
 from einops import rearrange
 from torch import Tensor
 
-from einconv import index_pattern
+from einconv.expressions.utils import create_conv_index_patterns
 from einconv.utils import _tuple, get_letters
 
 
@@ -88,34 +88,25 @@ def _operands_and_shape(
         Einsum operands in order un-grouped input, patterns, un-grouped vector
         Output shape
     """
-    # convert into tuple format
     N = x.dim() - 2
-    input_sizes = x.shape[2:]
-    t_kernel_size: Tuple[int, ...] = _tuple(kernel_size, N)
-    t_dilation: Tuple[int, ...] = _tuple(dilation, N)
-    t_padding: Union[Tuple[int, ...], str] = (
-        padding if isinstance(padding, str) else _tuple(padding, N)
+    input_size = x.shape[2:]
+    patterns = create_conv_index_patterns(
+        N,
+        input_size,
+        kernel_size,
+        stride=stride,
+        padding=padding,
+        dilation=dilation,
+        device=x.device,
+        dtype=x.dtype,
     )
-    t_stride: Tuple[int, ...] = _tuple(stride, N)
-
-    patterns: List[Tensor] = [
-        index_pattern(
-            input_sizes[n],
-            t_kernel_size[n],
-            stride=t_stride[n],
-            padding=t_padding if isinstance(t_padding, str) else t_padding[n],
-            dilation=t_dilation[n],
-            device=x.device,
-            dtype=x.dtype,
-        )
-        for n in range(N)
-    ]
     x_ungrouped = rearrange(x, "n (g c_in) ... -> n g c_in ...", g=groups)
     v_ungrouped = rearrange(v, "n (g c_out) ... -> n g c_out ...", g=groups)
     operands = [x_ungrouped, *patterns, v_ungrouped]
 
     in_channels = x.shape[1]
     out_channels = v.shape[1]
+    t_kernel_size = _tuple(kernel_size, N)
     shape = (out_channels, in_channels // groups, *t_kernel_size)
 
     return operands, shape

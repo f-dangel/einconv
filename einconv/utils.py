@@ -3,7 +3,10 @@
 from math import floor
 from typing import Any, List, Optional, Set, Tuple, Union
 
+import torch
 from torch.nn import Module
+
+cpu = torch.device("cpu")
 
 
 def _tuple(conv_hyperparameter: Union[int, Tuple[int, ...]], N: int) -> Tuple[int, ...]:

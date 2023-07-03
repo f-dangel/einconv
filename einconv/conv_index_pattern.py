@@ -6,9 +6,7 @@ import torch
 from torch import Tensor, arange, eye, logical_and, nonzero, ones_like, zeros
 from torch.nn.functional import conv1d
 
-from einconv.utils import get_conv_output_size, get_conv_paddings
-
-cpu = torch.device("cpu")
+from einconv.utils import cpu, get_conv_output_size, get_conv_paddings
 
 
 def index_pattern(
