@@ -1,10 +1,9 @@
-"""einconv library."""
+"""Einsum implementations of convolutions and related operations."""
 
+from einconv.conv_index_pattern import index_pattern
+from einconv.simplifications import simplify
 
-def hello(name):
-    """Say hello to a name.
-
-    Args:
-        name (str): Name to say hello to.
-    """
-    print(f"Hello, {name}")
+__all__ = [
+    "index_pattern",
+    "simplify",
+]

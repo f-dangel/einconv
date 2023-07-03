@@ -91,6 +91,7 @@ flake8:
 
 darglint-check:
 	@darglint --verbosity 2 einconv
+	@darglint --verbosity 2 test
 
 .PHONY: pydocstyle-check
 
