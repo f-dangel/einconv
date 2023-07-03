@@ -16,9 +16,10 @@ pip install einconv
 ## Examples
 
 - [Basic
-  example](https://github.com/f-dangel/einconv/blob/master/docs/tutorials/basic_conv2d.py)
+  example](https://einconv.readthedocs.io/en/latest/tutorials/basic_conv2d/)
 
-- Coming soon: More tutorials.
+- For more tutorials, check out the
+  [docs](https://einconv.readthedocs.io/en/latest/)
 
 ## Features & Usage
 
