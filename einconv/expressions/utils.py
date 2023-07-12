@@ -6,7 +6,75 @@ import torch
 from torch import Tensor
 
 from einconv import index_pattern
-from einconv.utils import _tuple, cpu
+from einconv.utils import _tuple, cpu, get_conv_input_size
+
+
+def create_conv_transpose_index_patterns(
+    N: int,
+    output_size: Union[int, Tuple[int, ...]],
+    kernel_size: Union[int, Tuple[int, ...]],
+    stride: Union[int, Tuple[int, ...]] = 1,
+    padding: Union[int, Tuple[int, ...]] = 0,
+    output_padding: Union[int, Tuple[int, ...]] = 0,
+    dilation: Union[int, Tuple[int, ...]] = 1,
+    device: torch.device = cpu,
+    dtype: torch.dtype = torch.bool,
+) -> List[Tensor]:
+    """Create the index pattern tensors for all dimensions of a transpose convolution.
+
+    Args:
+        N: Transpose convolution dimension.
+        output_size: Spatial input dimensions of the transpose convolution (output
+            dimensions of the associated convolution). Can be a single integer
+            (shared along all spatial dimensions), or an ``N``-tuple of integers.
+        kernel_size: Kernel dimensions. Can be a single integer (shared along all
+            spatial dimensions), or an ``N``-tuple of integers.
+        stride: Stride of the convolution. Can be a single integer (shared along all
+            spatial dimensions), or an ``N``-tuple of integers. Default: ``1``.
+        padding: Padding of the convolution. Can be a single integer (shared along
+            all spatial dimensions), an ``N``-tuple of integers, or a string.
+            Default: ``0``. Allowed strings are ``'same'`` and ``'valid'``.
+        output_padding: Number of pixels at the right edge of the convolution's input
+            that do not overlap with the kernel and hence must be added as padding when
+            considering a transpose convolution. Can be a single integer (shared along
+            all spatial dimensions), or an ``N``-tuple of integers. Default: ``0``.
+        dilation: Dilation of the convolution. Can be a single integer (shared along
+            all spatial dimensions), or an ``N``-tuple of integers. Default: ``1``.
+        device: Device to create the tensors on. Default: ``'cpu'``.
+        dtype: Data type of the pattern tensor. Default: ``torch.bool``.
+
+    Returns:
+        List of index pattern tensors for dimensions ``1, ..., N``.
+    """
+    # determine associated convolution's input size
+    t_output_size = _tuple(output_size, N)
+    t_kernel_size = _tuple(kernel_size, N)
+    t_stride = _tuple(stride, N)
+    t_padding = _tuple(padding, N)
+    t_output_padding = _tuple(output_padding, N)
+    t_dilation = _tuple(dilation, N)
+    t_input_size = tuple(
+        get_conv_input_size(
+            t_output_size[n],
+            t_kernel_size[n],
+            t_stride[n],
+            t_padding[n],
+            t_output_padding[n],
+            t_dilation[n],
+        )
+        for n in range(N)
+    )
+
+    return create_conv_index_patterns(
+        N,
+        t_input_size,
+        t_kernel_size,
+        stride=t_stride,
+        padding=t_padding,
+        dilation=t_dilation,
+        device=device,
+        dtype=dtype,
+    )
 
 
 def create_conv_index_patterns(
@@ -43,7 +111,7 @@ def create_conv_index_patterns(
     # convert into tuple format
     t_input_size = _tuple(input_size, N)
     t_kernel_size = _tuple(kernel_size, N)
-    t_stride: Tuple[int, ...] = _tuple(stride, N)
+    t_stride = _tuple(stride, N)
     t_padding = padding if isinstance(padding, str) else _tuple(padding, N)
     t_dilation = _tuple(dilation, N)
 
