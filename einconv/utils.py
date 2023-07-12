@@ -155,11 +155,36 @@ def get_conv_output_size(
     padding_left, padding_right = get_conv_paddings(
         kernel_size, stride, padding, dilation
     )
+    kernel_span = kernel_size + (kernel_size - 1) * (dilation - 1)
 
-    return 1 + floor(
-        (
-            (input_size + padding_left + padding_right)
-            - (kernel_size + (kernel_size - 1) * (dilation - 1))
-        )
-        / stride
-    )
+    return 1 + floor((input_size + padding_left + padding_right - kernel_span) / stride)
+
+
+def get_conv_input_size(
+    output_size: int,
+    kernel_size: int,
+    stride: int,
+    padding: int,
+    output_padding: int,
+    dilation: int,
+) -> int:
+    """Compute the input dimension of a convolution (output of a transpose convolution).
+
+    Args:
+        output_size: Spatial output dimensions of a convolution (spatial input
+            dimensions of a transpose convolution).
+        kernel_size: Kernel size of the convolution.
+        stride: Stride of the convolution.
+        padding: Padding of the convolution.
+        output_padding: Number of pixels at the right edge of the convolution's input
+            that do not overlap with the kernel and hence must be added as padding when
+            considering a transpose convolution.
+        dilation: Dilation of the convolution.
+
+    Returns:
+        Input dimension of the convolution (output dimension of transpose convolution.)
+    """
+    kernel_span = kernel_size + (kernel_size - 1) * (dilation - 1)
+    input_size_padded = (output_size - 1) * stride + kernel_span + output_padding
+
+    return input_size_padded - 2 * padding
