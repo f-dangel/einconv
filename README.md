@@ -55,7 +55,7 @@ They work in exactly the same way as their PyTorch equivalents.
 `einconv` can generate `einsum` expressions (equation, operands, and output
 shape) for the following operations:
 
-- Forward pass of `N`-dimensional convolution
+- Forward pass of `N`-dimensional convolution and transpose convolution
 - Backward pass (input and weight VJPs) of `N`-dimensional convolution
 - Input unfolding (`im2col/unfold`) for inputs of `N`-dimensional convolution
 - Input-based Kronecker factors of Fisher approximations for convolutions (KFC
