@@ -16,7 +16,7 @@ nav:
     - Developer notes: develop.md
 theme:
     name: material
-    logo: logo.png
+    logo: logo_transparent.png
     features:
         - content.code.copy
 copyright: Copyright &copy; 2023 Felix Dangel

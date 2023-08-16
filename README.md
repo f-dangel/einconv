@@ -1,4 +1,4 @@
-# <img alt="Einconv:" src="./docs/logo.png" height="90"> Convolutions Through the Lens of Tensor Networks
+# <img alt="Einconv:" src="./docs/logo_transparent.png" height="90"> Convolutions Through the Lens of Tensor Networks
 
 This package offers `einsum`-based implementations of convolutions and related
 operations in PyTorch.
