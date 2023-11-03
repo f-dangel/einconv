@@ -53,8 +53,8 @@ class SymbolicTensor:
                 device will be used. Otherwise, the tensor will be instantiated on CPU.
             dtype: Data type to instantiate the tensor with. If ``None`` and ``tensor``
                 is specified, the data type of ``tensor`` is used. If specified, the
-                passed data type will be used. Otherwise, the tensor will be instantiated
-                with PyTorch's current default data type.
+                passed data type will be used. Otherwise, the tensor will be
+                instantiated with PyTorch's current default data type.
 
         Returns:
             The instantiated tensor.

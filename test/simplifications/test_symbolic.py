@@ -29,8 +29,8 @@ def test_instantiate_no_history(device: torch.device, dtype: torch.dtype):
     weight_symbolic = SymbolicTensor(name, shape, indices)
 
     # check that construction fails if shape and indices have different lengths
+    other_indices = ("c_out", "c_in", "k1")
     with raises(ValueError):
-        other_indices = ("c_out", "c_in", "k1")
         SymbolicTensor(name, shape, other_indices)
 
     # check that instantiation fails if tensor is unspecified
@@ -38,8 +38,8 @@ def test_instantiate_no_history(device: torch.device, dtype: torch.dtype):
         weight_symbolic.instantiate(device=device, dtype=dtype)
 
     # check that instantiation fails if shape is incorrect
+    other_shape = (4, 3, 5, 1)
     with raises(ValueError):
-        other_shape = (4, 3, 5, 1)
         weight_symbolic.instantiate(rand(*other_shape, device=device, dtype=dtype))
 
     # check if properly converted to dtype and device
