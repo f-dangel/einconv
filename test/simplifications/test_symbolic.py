@@ -84,3 +84,46 @@ def test_group(device: torch.device, dtype: torch.dtype):
     assert weight_symbolic.shape == grouped_shape
     grouped_weight_tensor = weight_symbolic.instantiate(weight_tensor)
     report_nonclose(weight_tensor.flatten(end_dim=1), grouped_weight_tensor)
+
+
+@mark.parametrize("dtype", DTYPES, ids=DTYPE_IDS)
+@mark.parametrize("device", DEVICES, ids=DEVICE_IDS)
+def test_narrow(device: torch.device, dtype: torch.dtype):
+    """Test narrowing along an index.
+
+    Args:
+        device: Device to instantiate on after narrowing.
+        dtype: Data type to instantiate with after narrowing.
+    """
+    manual_seed(0)
+
+    name = "weight"
+    shape = (4, 3, 5, 2)
+    indices = ("c_out", "c_in", "k1", "k2")
+    weight_symbolic = SymbolicTensor(name, shape, indices)
+    weight_tensor = rand(*shape, device=device, dtype=dtype)
+
+    # start must be non-negative
+    with raises(ValueError):
+        weight_symbolic.narrow("c_out", -1, 1)
+
+    # length must be positive
+    with raises(ValueError):
+        weight_symbolic.narrow("c_out", 1, 0)
+
+    # range must not exceed dimension
+    with raises(ValueError):
+        weight_symbolic.narrow("c_out", 0, 5)
+
+    # range must not exceed dimension
+    with raises(ValueError):
+        weight_symbolic.narrow("c_out", 2, 3)
+
+    # narrowing correctly transforms a tensor when instantiating
+    weight_symbolic.narrow("k1", 1, 2)
+    narrowed_indices = indices
+    narrowed_shape = (4, 3, 2, 2)
+    assert weight_symbolic.indices == narrowed_indices
+    assert weight_symbolic.shape == narrowed_shape
+    narrowed_weight_tensor = weight_symbolic.instantiate(weight_tensor)
+    report_nonclose(weight_tensor.narrow(2, 1, 2), narrowed_weight_tensor)

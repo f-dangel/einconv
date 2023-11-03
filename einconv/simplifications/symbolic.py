@@ -170,3 +170,53 @@ class SymbolicTensor:
             as_str += "\n\t- "
             as_str += f"({idx}) {info}: shape {shape}, indices {indices}"
         return as_str
+
+    def narrow(self, index: str, start: int, length: int):
+        """Narrow an index to a specified range.
+
+        Args:
+            index: Name of the index to narrow.
+            start: Start of the range.
+            length: Length of the range.
+
+        Raises:
+            ValueError: If the start or length are invalid.
+
+        """
+        if start < 0:
+            raise ValueError(f"Start of range must be non-negative. Got {start}.")
+        if length <= 0:
+            raise ValueError(f"Length of range must be positive. Got {length}.")
+
+        pos = self.indices.index(index)
+        end = start + length - 1
+
+        if end >= self.shape[pos]:
+            raise ValueError(
+                f"Range [{start}, {end}] exceeds the length of index {index} "
+                + f"({self.shape[pos]})."
+            )
+
+        new_shape = self.shape[:pos] + (length,) + self.shape[pos + 1 :]
+
+        # construct transform and update internal state
+        def apply_narrow(tensor: Tensor) -> Tensor:
+            """Narrow the specified index to the specified range.
+
+            Args:
+                tensor: Tensor to narrow.
+
+            Returns:
+                Narrowed tensor.
+            """
+            return tensor.narrow(pos, start, length)
+
+        self.history.append(
+            (
+                f"narrow {index!r} from {start} to including {end}",
+                new_shape,
+                self.indices,
+            )
+        )
+        self.transforms.append(apply_narrow)
+        self.shape = new_shape
