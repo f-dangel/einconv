@@ -48,3 +48,39 @@ def test_instantiate_no_history(device: torch.device, dtype: torch.dtype):
     assert weight_tensor.dtype == dtype
     assert weight_tensor.device == device
     report_nonclose(tensor.to(device, dtype), weight_tensor)
+
+
+@mark.parametrize("dtype", DTYPES, ids=DTYPE_IDS)
+@mark.parametrize("device", DEVICES, ids=DEVICE_IDS)
+def test_group(device: torch.device, dtype: torch.dtype):
+    """Test grouping multiple indices together.
+
+    Args:
+        device: Device to instantiate on after grouping.
+        dtype: Data type to instantiate with after grouping.
+    """
+    manual_seed(0)
+
+    name = "weight"
+    shape = (4, 3, 5, 2)
+    indices = ("c_out", "c_in", "k1", "k2")
+    weight_symbolic = SymbolicTensor(name, shape, indices)
+    weight_tensor = rand(*shape, device=device, dtype=dtype)
+
+    # grouping non-consecutive indices is not supported
+    with raises(NotImplementedError):
+        weight_symbolic.group(("c_out", "k1"))
+
+    # grouping fails if grouped axis name already exists
+    poor_naming = ("(c_out c_in)", "c_out", "c_in", "a")
+    with raises(ValueError):
+        SymbolicTensor(name, shape, poor_naming).group(("c_out", "c_in"))
+
+    # grouping correctly transforms a tensor when instantiating
+    weight_symbolic.group(("c_out", "c_in"))
+    grouped_indices = ("(c_out c_in)", "k1", "k2")
+    grouped_shape = (12, 5, 2)
+    assert weight_symbolic.indices == grouped_indices
+    assert weight_symbolic.shape == grouped_shape
+    grouped_weight_tensor = weight_symbolic.instantiate(weight_tensor)
+    report_nonclose(weight_tensor.flatten(end_dim=1), grouped_weight_tensor)

@@ -6,6 +6,7 @@ This allows to simplify contractions once and cache them.
 from typing import Callable, List, Optional, Tuple
 
 import torch
+from einops import rearrange
 from torch import Tensor, get_default_dtype
 
 from einconv.utils import cpu
@@ -102,3 +103,70 @@ class SymbolicTensor:
                 f"Tensor after stage {stage_idx} ({stage}) expected to have shape "
                 + f"{shape} (got {tuple(tensor.shape)}) with axes named {indices}."
             )
+
+    def group(self, indices: Tuple[str, ...]):
+        """Combine multiple indices into a single index.
+
+        Args:
+            indices: Indices to group.
+
+        Raises:
+            NotImplementedError: If the indices are not consecutive.
+            ValueError: If the new index name already exists.
+        """
+        pos = self.indices.index(indices[0])
+        if indices != self.indices[pos : pos + len(indices)]:
+            raise NotImplementedError(
+                f"Only consecutive indices can be grouped. Got {indices} but axes "
+                + f"are {self.indices}."
+            )
+
+        group_name = "(" + " ".join(indices) + ")"
+        if group_name in self.indices:
+            raise ValueError(f"Index {group_name} already exists.")
+
+        # determine dimension and indices of grouped tensor
+        group_dim = 1
+        for dim in self.shape[pos : pos + len(indices)]:
+            group_dim *= dim
+
+        new_indices = (
+            self.indices[:pos] + (group_name,) + self.indices[pos + len(indices) :]
+        )
+        new_shape = self.shape[:pos] + (group_dim,) + self.shape[pos + len(indices) :]
+
+        # construct transform and update internal state
+        equation = f"{' '.join(self.indices)} -> {' '.join(new_indices)}"
+
+        def apply_grouping(tensor: Tensor) -> Tensor:
+            """Group the specified axes into a single one.
+
+            Args:
+                tensor: Tensor to group axes of.
+
+            Returns:
+                Tensor with grouped axes.
+            """
+            return rearrange(tensor, equation)
+
+        self.history.append(
+            (f"group {indices} into {group_name!r}", new_shape, new_indices)
+        )
+        self.transforms.append(apply_grouping)
+        self.indices = new_indices
+        self.shape = new_shape
+
+    def __repr__(self) -> str:
+        """Return a string representation of the symbolic tensor.
+
+        Returns:
+            String representation of the symbolic tensor, including its transformation
+            history.
+        """
+        as_str = f"SymbolicTensor({self.name!r}, {self.shape}, {self.indices})"
+
+        as_str += "\nTransformations:"
+        for idx, (info, shape, indices) in enumerate(self.history):
+            as_str += "\n\t- "
+            as_str += f"({idx}) {info}: shape {shape}, indices {indices}"
+        return as_str
