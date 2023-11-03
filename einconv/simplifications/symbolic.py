@@ -21,6 +21,9 @@ class SymbolicTensor:
             name: Tensor name.
             shape: Tensor dimensions.
             indices: Name of each axis.
+
+        Raises:
+            ValueError: If the number of dimensions does not match the number of axes.
         """
         if len(shape) != len(indices):
             raise ValueError(
@@ -31,9 +34,11 @@ class SymbolicTensor:
         self.shape = shape
         self.indices = indices
 
+        # human-readable record of transformations
         self.history: List[Tuple[str, Tuple[int, ...], Tuple[str, ...]]] = [
             ("initial", shape, indices)
         ]
+        # record of functional transformations
         self.transforms: List[Callable[[Tensor], Tensor]] = []
 
     def instantiate(
