@@ -155,11 +155,6 @@ def get_conv_output_size(
     padding_left, padding_right = get_conv_paddings(
         kernel_size, stride, padding, dilation
     )
+    kernel_span = kernel_size + (kernel_size - 1) * (dilation - 1)
 
-    return 1 + floor(
-        (
-            (input_size + padding_left + padding_right)
-            - (kernel_size + (kernel_size - 1) * (dilation - 1))
-        )
-        / stride
-    )
+    return 1 + floor((input_size + padding_left + padding_right - kernel_span) / stride)
