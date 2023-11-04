@@ -161,3 +161,36 @@ def test_rename(device: torch.device, dtype: torch.dtype):
     assert weight_symbolic.shape == shape
     renamed_weight_tensor = weight_symbolic.instantiate(weight_tensor)
     report_nonclose(weight_tensor, renamed_weight_tensor)
+
+
+@mark.parametrize("dtype", DTYPES, ids=DTYPE_IDS)
+@mark.parametrize("device", DEVICES, ids=DEVICE_IDS)
+def test_ungroup(device: torch.device, dtype: torch.dtype):
+    """Test un-grouping an index.
+
+    Args:
+        device: Device to instantiate on after un-grouping.
+        dtype: Data type to instantiate with after un-grouping.
+    """
+    manual_seed(0)
+
+    name = "weight"
+    shape = (4, 3, 20, 2)
+    indices = ("c_out", "c_in", "k1", "k2")
+    weight_symbolic = SymbolicTensor(name, shape, indices)
+    weight_tensor = rand(*shape, device=device, dtype=dtype)
+
+    # sizes must preserve the ungrouped dimension
+    with raises(ValueError):
+        weight_symbolic.ungroup("k1", (9, 2))
+
+    # can't rename to an existing name
+    with raises(ValueError):
+        weight_symbolic.ungroup("k1", (10, 2), new_names=("k2", "d"))
+
+    # un-grouping applies the correct transformation
+    weight_symbolic.ungroup("k1", (5, 2, 2))
+    ungrouped_shape = (4, 3, 5, 2, 2, 2)
+    assert weight_symbolic.shape == ungrouped_shape
+    ungrouped_weight_tensor = weight_symbolic.instantiate(weight_tensor)
+    report_nonclose(weight_tensor.reshape(*ungrouped_shape), ungrouped_weight_tensor)

@@ -132,7 +132,7 @@ class SymbolicTensor:
         # construct transform and update internal state
         equation = f"{' '.join(self.indices)} -> {' '.join(new_indices)}"
 
-        def apply_grouping(tensor: Tensor) -> Tensor:
+        def apply_group(tensor: Tensor) -> Tensor:
             """Group the specified axes into a single one.
 
             Args:
@@ -146,7 +146,7 @@ class SymbolicTensor:
         self.history.append(
             (f"group {indices} into {group_name!r}", new_shape, new_indices)
         )
-        self.transforms.append(apply_grouping)
+        self.transforms.append(apply_group)
         self.indices = new_indices
         self.shape = new_shape
 
@@ -269,3 +269,82 @@ class SymbolicTensor:
                 f"Shape {self.shape} of length {len(self.shape)} must have same length "
                 + f"as indices {self.indices} of length ({len(self.indices)})."
             )
+
+    def ungroup(
+        self,
+        index: str,
+        sizes: Tuple[int, ...],
+        new_names: Optional[Tuple[str, ...]] = None,
+    ) -> Tuple[str, ...]:
+        """Un-group an index into multiple indices.
+
+        Args:
+            index: Index to ungroup.
+            size: Sizes of the new indices.
+            new_names: Names of the new indices. If `None`, new names are generated
+                automatically. Defaults to `None`.
+
+        Returns:
+            Names of the new indices.
+
+        Raises:
+            ValueError: If the supplied or auto-generated new index names are already
+                in use.
+            ValueError: If the supplied sizes do not match the size of the index.
+        """
+        if new_names is None:
+            new_names = tuple(f"{index}_{i}" for i in range(len(sizes)))
+
+        if any(new_name in self.indices for new_name in new_names):
+            raise ValueError(
+                f"One of the new index names {new_names} is already in use. "
+                + f"Indices: {self.indices}."
+            )
+
+        dim = 1
+        for size in sizes:
+            dim *= size
+
+        pos = self.indices.index(index)
+        if dim != self.shape[pos]:
+            raise ValueError(
+                f"Size of new indices {sizes} ({dim}) must match size of index "
+                + f"{index} ({self.shape[pos]})."
+            )
+
+        # create transform and update inner state
+        shape_info = dict(zip(new_names, sizes))
+        equation = (
+            f"{' '.join(self.indices[:pos])} ({' '.join(new_names)}) "
+            + f"{' '.join(self.indices[pos + 1:])} -> "
+            + f"{' '.join(self.indices[:pos] + new_names + self.indices[pos + 1:])}"
+        )
+
+        def apply_ungroup(tensor: Tensor) -> Tensor:
+            """Un-group the specified index.
+
+            Args:
+                tensor: Tensor to un-group.
+
+            Returns:
+                Ungrouped tensor.
+            """
+            return rearrange(tensor, equation, **shape_info)
+
+        new_indices = self.indices[:pos] + new_names + self.indices[pos + 1 :]
+        new_shape = self.shape[:pos] + sizes + self.shape[pos + 1 :]
+
+        self.history.append(
+            (
+                f"ungroup {index!r} into {sizes} {new_names}",
+                new_shape,
+                new_indices,
+            )
+        )
+        self.transforms.append(apply_ungroup)
+        self.indices = new_indices
+        self.shape = new_shape
+
+        self._check_state_valid()
+
+        return new_names
