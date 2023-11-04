@@ -21,16 +21,8 @@ class SymbolicTensor:
         Args:
             name: Tensor name.
             shape: Tensor dimensions.
-            indices: Name of each axis.
-
-        Raises:
-            ValueError: If the number of dimensions does not match the number of axes.
+            indices: Name of each axis. Each name must be unique.
         """
-        if len(shape) != len(indices):
-            raise ValueError(
-                f"Shape {shape} of length {len(shape)} must have same length as "
-                + f" indices {indices} of length ({len(indices)})."
-            )
         self.name = name
         self.shape = shape
         self.indices = indices
@@ -41,6 +33,8 @@ class SymbolicTensor:
         ]
         # record of functional transformations
         self.transforms: List[Callable[[Tensor], Tensor]] = []
+
+        self._check_state_valid()
 
     def instantiate(
         self,
@@ -156,6 +150,8 @@ class SymbolicTensor:
         self.indices = new_indices
         self.shape = new_shape
 
+        self._check_state_valid()
+
     def __repr__(self) -> str:
         """Return a string representation of the symbolic tensor.
 
@@ -219,3 +215,57 @@ class SymbolicTensor:
         )
         self.transforms.append(apply_narrow)
         self.shape = new_shape
+
+        self._check_state_valid()
+
+    def rename(self, old: str, new: str):
+        """Rename an index.
+
+        Args:
+            old: Name of the index to rename.
+            new: New name of the index.
+
+        Raises:
+            ValueError: If the new index name already exists.
+        """
+        pos = self.indices.index(old)
+
+        if new in self.indices:
+            raise ValueError(f"New index name {new!r} already in use.")
+
+        new_indices = self.indices[:pos] + (new,) + self.indices[pos + 1 :]
+
+        # create transformation and update internal state
+        def apply_rename(tensor: Tensor) -> Tensor:
+            """Rename the specified index.
+
+            Renaming leave a tensor unchanged.
+
+            Args:
+                tensor: Tensor to rename.
+
+            Returns:
+                The original tensor.
+            """
+            return tensor
+
+        self.history.append((f"rename {old!r} to {new!r}", self.shape, new_indices))
+        self.indices = new_indices
+
+        self._check_state_valid()
+
+    def _check_state_valid(self):
+        """Verify that the internal state is valid.
+
+        Indices must have unique names, and have the same length as shape.
+
+        Raises:
+            ValueError: If the internal state is invalid.
+        """
+        if len(set(self.indices)) != len(self.indices):
+            raise ValueError(f"Indices must be unique. Got {self.indices}.")
+        if len(self.shape) != len(self.indices):
+            raise ValueError(
+                f"Shape {self.shape} of length {len(self.shape)} must have same length "
+                + f"as indices {self.indices} of length ({len(self.indices)})."
+            )

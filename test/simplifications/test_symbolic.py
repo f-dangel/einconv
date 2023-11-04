@@ -28,6 +28,10 @@ def test_instantiate_no_history(device: torch.device, dtype: torch.dtype):
     indices = ("c_out", "c_in", "k1", "k2")
     weight_symbolic = SymbolicTensor(name, shape, indices)
 
+    # instantiation fails if indices are not unique
+    with raises(ValueError):
+        SymbolicTensor(name, shape, ("c_out", "c_in", "c_out", "k2"))
+
     # check that construction fails if shape and indices have different lengths
     other_indices = ("c_out", "c_in", "k1")
     with raises(ValueError):
@@ -127,3 +131,33 @@ def test_narrow(device: torch.device, dtype: torch.dtype):
     assert weight_symbolic.shape == narrowed_shape
     narrowed_weight_tensor = weight_symbolic.instantiate(weight_tensor)
     report_nonclose(weight_tensor.narrow(2, 1, 2), narrowed_weight_tensor)
+
+
+@mark.parametrize("dtype", DTYPES, ids=DTYPE_IDS)
+@mark.parametrize("device", DEVICES, ids=DEVICE_IDS)
+def test_rename(device: torch.device, dtype: torch.dtype):
+    """Test renaming an index.
+
+    Args:
+        device: Device to instantiate on after renaming.
+        dtype: Data type to instantiate with after renaming.
+    """
+    manual_seed(0)
+
+    name = "weight"
+    shape = (4, 3, 5, 2)
+    indices = ("c_out", "c_in", "k1", "k2")
+    weight_symbolic = SymbolicTensor(name, shape, indices)
+    weight_tensor = rand(*shape, device=device, dtype=dtype)
+
+    # new name cannot be in use
+    with raises(ValueError):
+        weight_symbolic.rename("c_out", "k1")
+
+    # renaming does nothing to a tensor when instantiating
+    weight_symbolic.rename("k1", "k1_new")
+    renamed_indices = ("c_out", "c_in", "k1_new", "k2")
+    assert weight_symbolic.indices == renamed_indices
+    assert weight_symbolic.shape == shape
+    renamed_weight_tensor = weight_symbolic.instantiate(weight_tensor)
+    report_nonclose(weight_tensor, renamed_weight_tensor)
