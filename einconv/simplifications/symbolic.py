@@ -181,7 +181,6 @@ class SymbolicTensor:
 
         Raises:
             ValueError: If the start or length are invalid.
-
         """
         if start < 0:
             raise ValueError(f"Start of range must be non-negative. Got {start}.")
