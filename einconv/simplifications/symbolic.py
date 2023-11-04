@@ -280,7 +280,7 @@ class SymbolicTensor:
 
         Args:
             index: Index to ungroup.
-            size: Sizes of the new indices.
+            sizes: Sizes of the new indices.
             new_names: Names of the new indices. If `None`, new names are generated
                 automatically. Defaults to `None`.
 
