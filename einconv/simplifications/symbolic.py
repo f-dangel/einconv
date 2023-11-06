@@ -3,13 +3,14 @@
 This allows to simplify contractions once and cache them.
 """
 
-from typing import Callable, List, Optional, Tuple
+from typing import Callable, List, Optional, Tuple, Union
 
 import torch
 from einops import rearrange
 from torch import Tensor, eye, get_default_dtype
 
-from einconv.utils import cpu
+from einconv.conv_index_pattern import index_pattern
+from einconv.utils import cpu, get_conv_output_size
 
 
 class SymbolicTensor:
@@ -381,8 +382,9 @@ class SymbolicIdentity(SymbolicTensor):
 
         Args:
             tensor: A tensor whose device and dtype will be used if specified.
-            device: The device used if `tensor` is not specified.
-            dtype: The data type used if `dtype` is not specified.
+            device: The device used if `tensor` is not specified. `None` means CPU.
+            dtype: The data type used if `tensor` is not specified. `None` means
+                PyTorch's default data type.
 
         Returns:
             The instantiated and transformed identity matrix.
@@ -395,3 +397,82 @@ class SymbolicIdentity(SymbolicTensor):
 
         identity = eye(self.dim, dtype=dtype, device=device)
         return super().instantiate(identity)
+
+
+class SymbolicIndexPattern(SymbolicTensor):
+    """Symbolic representation of an index pattern tensor."""
+
+    def __init__(
+        self,
+        name: str,
+        indices: Tuple[str, str, str],
+        input_size: int,
+        kernel_size: int,
+        stride: int = 1,
+        padding: Union[int, str] = 0,
+        dilation: int = 1,
+    ):
+        """Initialize a symbolic index pattern tensor of a convolution.
+
+        Args:
+            name: Name of the index pattern tensor.
+            indices: Indices of the index pattern tensor. Must be three.
+            input_size: Size of the convolution's input.
+            kernel_size: Size of the convolution's kernel.
+            stride: Stride of the convolution. Defaults to `1`.
+            padding: Padding of the convolution. Defaults to `0`.
+            dilation: Dilation of the convolution. Defaults to `1`.
+
+        Raises:
+            ValueError: If the number of indices is not 3.
+        """
+        if len(indices) != 3:
+            raise ValueError(f"Index pattern must have three indices. Got {indices}.")
+
+        output_size = get_conv_output_size(
+            input_size, kernel_size, stride, padding, dilation
+        )
+        shape = (kernel_size, output_size, input_size)
+        super().__init__(name, shape, indices)
+
+        # save convolution hyper-parameters
+        self.input_size = input_size
+        self.output_size = output_size
+        self.kernel_size = kernel_size
+        self.stride = stride
+        self.padding = padding
+        self.dilation = dilation
+
+    def instantiate(
+        self,
+        tensor: Optional[Tensor] = None,
+        device: Optional[torch.device] = None,
+        dtype: Optional[torch.dtype] = None,
+    ) -> Tensor:
+        """Instantiate the symbolic index pattern tensor.
+
+        Args:
+            tensor: A tensor whose device and dtype will be used if specified.
+            device: The device used if `tensor` is not specified. `None` means CPU.
+            dtype: The data type used if `tensor` is not specified. `None` means
+                PyTorch's default data type.
+
+        Returns:
+            The instantiated and transformed index pattern matrix.
+        """
+        device = tensor.device if tensor is not None else device
+        device = cpu if device is None else device
+
+        dtype = tensor.dtype if tensor is not None else dtype
+        dtype = get_default_dtype() if dtype is None else dtype
+
+        pattern = index_pattern(
+            self.input_size,
+            self.kernel_size,
+            stride=self.stride,
+            padding=self.padding,
+            dilation=self.dilation,
+            device=device,
+            dtype=dtype,
+        )
+        return super().instantiate(pattern)
