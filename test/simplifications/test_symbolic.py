@@ -6,7 +6,12 @@ import torch
 from pytest import mark, raises, skip
 from torch import bfloat16, eye, float16, float32, manual_seed, rand
 
-from einconv.simplifications.symbolic import SymbolicIdentity, SymbolicTensor
+from einconv.conv_index_pattern import index_pattern
+from einconv.simplifications.symbolic import (
+    SymbolicIdentity,
+    SymbolicIndexPattern,
+    SymbolicTensor,
+)
 
 DTYPES = [float32, float16, bfloat16]
 DTYPE_IDS = [f"dtype={dtype}" for dtype in DTYPES]
@@ -219,4 +224,51 @@ def test_identity(device: torch.device, dtype: torch.dtype):
 
     identity_tensor = eye(dim, dtype=dtype, device=device)
 
-    report_nonclose(identity_tensor, identity_symbolic.instantiate(identity_tensor))
+    report_nonclose(
+        identity_tensor, identity_symbolic.instantiate(dtype=dtype, device=device)
+    )
+
+
+@mark.parametrize("dtype", DTYPES, ids=DTYPE_IDS)
+@mark.parametrize("device", DEVICES, ids=DEVICE_IDS)
+def test_index_pattern(device: torch.device, dtype: torch.dtype):
+    """Test symbolic index pattern class.
+
+    Args:
+        device: Device to instantiate on.
+        dtype: Data type to instantiate with.
+    """
+    name = "Pi"
+    indices = ("k", "o", "i")
+    input_size = 10
+    kernel_size = 3
+    stride = 2
+    padding = 1
+    dilation = 1
+
+    too_few_indices = ("a", "b")
+    with raises(ValueError):
+        SymbolicIndexPattern(name, too_few_indices, input_size, kernel_size)
+
+    pattern_symbolic = SymbolicIndexPattern(
+        name,
+        indices,
+        input_size,
+        kernel_size,
+        stride=stride,
+        padding=padding,
+        dilation=dilation,
+    )
+
+    pattern_tensor = index_pattern(
+        input_size,
+        kernel_size,
+        stride=stride,
+        padding=padding,
+        dilation=dilation,
+        dtype=dtype,
+        device=device,
+    )
+    report_nonclose(
+        pattern_tensor, pattern_symbolic.instantiate(dtype=dtype, device=device)
+    )
