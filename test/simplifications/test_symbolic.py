@@ -3,10 +3,10 @@
 from test.utils import DEVICE_IDS, DEVICES, report_nonclose
 
 import torch
-from pytest import mark, raises
-from torch import bfloat16, float16, float32, manual_seed, rand
+from pytest import mark, raises, skip
+from torch import bfloat16, eye, float16, float32, manual_seed, rand
 
-from einconv.simplifications.symbolic import SymbolicTensor
+from einconv.simplifications.symbolic import SymbolicIdentity, SymbolicTensor
 
 DTYPES = [float32, float16, bfloat16]
 DTYPE_IDS = [f"dtype={dtype}" for dtype in DTYPES]
@@ -194,3 +194,29 @@ def test_ungroup(device: torch.device, dtype: torch.dtype):
     assert weight_symbolic.shape == ungrouped_shape
     ungrouped_weight_tensor = weight_symbolic.instantiate(weight_tensor)
     report_nonclose(weight_tensor.reshape(*ungrouped_shape), ungrouped_weight_tensor)
+
+
+@mark.parametrize("dtype", DTYPES, ids=DTYPE_IDS)
+@mark.parametrize("device", DEVICES, ids=DEVICE_IDS)
+def test_identity(device: torch.device, dtype: torch.dtype):
+    """Test symbolic identity class.
+
+    Args:
+        device: Device to instantiate on.
+        dtype: Data type to instantiate with.
+    """
+    name = "I"
+    dim = 10
+    too_many_indices = ("a", "b", "c")
+    with raises(ValueError):
+        SymbolicIdentity(name, dim, too_many_indices)
+
+    indices = ("a", "b")
+    identity_symbolic = SymbolicIdentity(name, dim, indices)
+
+    if dtype == bfloat16 and str(device) == "cpu":
+        skip("eye not supported in bfloat16 on CPU.")
+
+    identity_tensor = eye(dim, dtype=dtype, device=device)
+
+    report_nonclose(identity_tensor, identity_symbolic.instantiate(identity_tensor))
