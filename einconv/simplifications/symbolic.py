@@ -7,7 +7,7 @@ from typing import Callable, List, Optional, Tuple
 
 import torch
 from einops import rearrange
-from torch import Tensor, get_default_dtype
+from torch import Tensor, eye, get_default_dtype
 
 from einconv.utils import cpu
 
@@ -348,3 +348,50 @@ class SymbolicTensor:
         self._check_state_valid()
 
         return new_names
+
+
+class SymbolicIdentity(SymbolicTensor):
+    """Symbolic representation of an identity matrix."""
+
+    def __init__(self, name: str, dim: int, indices: Tuple[str, str]):
+        """Initialize a symbolic identity matrix.
+
+        Args:
+            name: Name of the identity matrix.
+            dim: Dimension of the identity matrix.
+            indices: Indices of the identity matrix.
+
+        Raises:
+            ValueError: If the number of indices is not 2.
+        """
+        if len(indices) != 2:
+            raise ValueError(
+                f"Identity matrix must have exactly two indices. Got {indices}."
+            )
+        super().__init__(name, (dim, dim), indices)
+        self.dim = dim
+
+    def instantiate(
+        self,
+        tensor: Optional[Tensor] = None,
+        device: Optional[torch.device] = None,
+        dtype: Optional[torch.dtype] = None,
+    ) -> Tensor:
+        """Instantiate the symbolic identity matrix.
+
+        Args:
+            tensor: A tensor whose device and dtype will be used if specified.
+            device: The device used if `tensor` is not specified.
+            dtype: The data type used if `dtype` is not specified.
+
+        Returns:
+            The instantiated and transformed identity matrix.
+        """
+        device = tensor.device if tensor is not None else device
+        device = cpu if device is None else device
+
+        dtype = tensor.dtype if tensor is not None else dtype
+        dtype = get_default_dtype() if dtype is None else dtype
+
+        identity = eye(self.dim, dtype=dtype, device=device)
+        return super().instantiate(identity)
