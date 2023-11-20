@@ -166,6 +166,11 @@ class SymbolicTensor:
         )
 
     def _transform_repr(self) -> str:
+        """Return a string representation of the transformation history.
+
+        Returns:
+            String representation of the transformation history.
+        """
         as_str = "Transformations:"
         for idx, (info, shape, indices) in enumerate(self.history):
             as_str += "\n\t- "
@@ -403,6 +408,12 @@ class SymbolicIdentity(SymbolicTensor):
         return super().instantiate(identity)
 
     def __repr__(self) -> str:
+        """Return a string representation of the symbolic tensor.
+
+        Returns:
+            String representation of the symbolic tensor, including its transformation
+            history.
+        """
         return (
             f"{self.__class__.__name__}(name={self.name!r}, dim={self.dim}, "
             + f"indices={self.indices})\n{self._transform_repr()}"
@@ -491,6 +502,12 @@ class SymbolicIndexPattern(SymbolicTensor):
         return super().instantiate(pattern)
 
     def __repr__(self) -> str:
+        """Return a string representation of the symbolic tensor.
+
+        Returns:
+            String representation of the symbolic tensor, including its transformation
+            history.
+        """
         return (
             f"{self.__class__.__name__}(name={self.name!r}, indices={self.indices}, "
             + f"input_size={self.input_size}, kernel_size={self.kernel_size}, "
