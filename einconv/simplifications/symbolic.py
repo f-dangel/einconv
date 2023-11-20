@@ -10,7 +10,7 @@ from einops import rearrange
 from torch import Tensor, eye, get_default_dtype
 
 from einconv.conv_index_pattern import index_pattern
-from einconv.utils import cpu, get_conv_output_size
+from einconv.utils import cpu, get_conv_output_size, get_conv_paddings
 
 
 class SymbolicTensor:
@@ -160,9 +160,18 @@ class SymbolicTensor:
             String representation of the symbolic tensor, including its transformation
             history.
         """
-        as_str = f"SymbolicTensor({self.name!r}, {self.shape}, {self.indices})"
+        return (
+            f"{self.__class__.__name__}(name={self.name!r}, shape={self.shape}, "
+            + f"indices={self.indices})\n{self._transform_repr()}"
+        )
 
-        as_str += "\nTransformations:"
+    def _transform_repr(self) -> str:
+        """Return a string representation of the transformation history.
+
+        Returns:
+            String representation of the transformation history.
+        """
+        as_str = "Transformations:"
         for idx, (info, shape, indices) in enumerate(self.history):
             as_str += "\n\t- "
             as_str += f"({idx}) {info}: shape {shape}, indices {indices}"
@@ -398,6 +407,18 @@ class SymbolicIdentity(SymbolicTensor):
         identity = eye(self.dim, dtype=dtype, device=device)
         return super().instantiate(identity)
 
+    def __repr__(self) -> str:
+        """Return a string representation of the symbolic tensor.
+
+        Returns:
+            String representation of the symbolic tensor, including its transformation
+            history.
+        """
+        return (
+            f"{self.__class__.__name__}(name={self.name!r}, dim={self.dim}, "
+            + f"indices={self.indices})\n{self._transform_repr()}"
+        )
+
 
 class SymbolicIndexPattern(SymbolicTensor):
     """Symbolic representation of an index pattern tensor."""
@@ -442,6 +463,9 @@ class SymbolicIndexPattern(SymbolicTensor):
         self.stride = stride
         self.padding = padding
         self.dilation = dilation
+        self.padding_left, self.padding_right = get_conv_paddings(
+            kernel_size, stride, padding, dilation
+        )
 
     def instantiate(
         self,
@@ -476,3 +500,45 @@ class SymbolicIndexPattern(SymbolicTensor):
             dtype=dtype,
         )
         return super().instantiate(pattern)
+
+    def __repr__(self) -> str:
+        """Return a string representation of the symbolic tensor.
+
+        Returns:
+            String representation of the symbolic tensor, including its transformation
+            history.
+        """
+        return (
+            f"{self.__class__.__name__}(name={self.name!r}, indices={self.indices}, "
+            + f"input_size={self.input_size}, kernel_size={self.kernel_size}, "
+            + f"stride={self.stride}, padding={self.padding}, dilation={self.dilation})"
+            + f"\n{self._transform_repr()}"
+        )
+
+    def is_downsampling(self) -> bool:
+        """Whether the index pattern tensor represents a downsampling convolution.
+
+        Returns:
+            `True` if the index pattern tensor represents a downsampling convolution,
+            `False` otherwise.
+        """
+        return (
+            self.stride > self.kernel_size
+            and self.padding_left == self.padding_right == 0
+            and self.dilation == 1
+            and self.input_size % self.stride == 0
+        )
+
+    def is_dense(self) -> bool:
+        """Whether the index pattern tensor represents a dense convolution.
+
+        Returns:
+            `True` if the index pattern tensor represents a dense convolution,
+            `False` otherwise.
+        """
+        return (
+            self.stride == self.kernel_size
+            and self.padding_left == self.padding_right == 0
+            and self.dilation == 1
+            and self.input_size % self.stride == 0
+        )

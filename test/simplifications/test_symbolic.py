@@ -272,3 +272,35 @@ def test_index_pattern(device: torch.device, dtype: torch.dtype):
     report_nonclose(
         pattern_tensor, pattern_symbolic.instantiate(dtype=dtype, device=device)
     )
+
+
+def test_is_downsampling():
+    """Test detection of down-sampling index patterns."""
+    I, K, S = 9, 2, 3
+    axes = ("k", "o", "i")
+    assert SymbolicIndexPattern("P", axes, I, K, stride=S).is_downsampling()
+
+    # padding destroys property
+    assert not SymbolicIndexPattern("P", axes, I, K, padding=1).is_downsampling()
+
+    # dilation destroys property
+    assert not SymbolicIndexPattern("P", axes, I, K, dilation=2).is_downsampling()
+
+    # boundary pixels destroy property
+    assert not SymbolicIndexPattern("P", axes, I + 1, K).is_downsampling()
+
+
+def test_is_dense():
+    """Test detection of index patterns of dense convolutions."""
+    I, K, S = 9, 3, 3
+    axes = ("k", "o", "i")
+    assert SymbolicIndexPattern("P", axes, I, K, stride=S).is_dense()
+
+    # padding destroys property
+    assert not SymbolicIndexPattern("P", axes, I, K, padding=1).is_dense()
+
+    # dilation destroys property
+    assert not SymbolicIndexPattern("P", axes, I, K, dilation=2).is_dense()
+
+    # boundary pixels destroy property
+    assert not SymbolicIndexPattern("P", axes, I + 1, K).is_dense()
