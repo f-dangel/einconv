@@ -104,9 +104,11 @@ def to_ConvNd_jax(einconv_module: ConvNd) -> Callable[[torch.Tensor], torch.Tens
         return jax_convNd(
             input,
             einconv_module.weight.data.clone(),
-            bias=None
-            if einconv_module.bias is None
-            else einconv_module.bias.data.clone(),
+            bias=(
+                None
+                if einconv_module.bias is None
+                else einconv_module.bias.data.clone()
+            ),
             stride=einconv_module.stride,
             padding=einconv_module.padding,
             dilation=einconv_module.dilation,

@@ -34,7 +34,7 @@ def einsum_expression(
     Returns:
         Einsum equation
         Einsum operands in order input, patterns
-        Output shape: ``[batch_size, in_channels, tot_output_size]``
+        Output shape: ``[batch_size, in_channels * tot_kernel_size, tot_output_size]``
     """
     N = x.dim() - 2
 

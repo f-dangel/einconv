@@ -1,4 +1,5 @@
 """Equivalent of ``torch.functional.unfold`` for arbitrary dimensions."""
+
 from typing import Tuple, Union
 
 from torch import Tensor, einsum
