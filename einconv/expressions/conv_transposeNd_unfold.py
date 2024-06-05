@@ -111,9 +111,6 @@ def einsum_expression(
     batch_size, out_channels = x.shape[:2]
     shape = (batch_size, out_channels * kernel_tot_size, input_tot_size)
 
-    print(equation)
-    print([op.shape for op in operands])
-
     if simplify:
         equation, operands = einconv.simplify(equation, operands)
 
