@@ -151,7 +151,11 @@ class TensorNetwork:
 
         for pos in range(len(self.input_indices)):
             for idx in maybe_squeeze:
-                if idx in self.input_indices[pos] and len(self.input_indices[pos]) > 1:
+                if (
+                    idx in self.input_indices[pos]
+                    and len(self.input_indices[pos]) > 1
+                    and not isinstance(self.operands[pos], Identity)
+                ):
                     idx_pos = self.input_indices[pos].index(idx)
 
                     self.input_indices[pos] = self.input_indices[pos].replace(idx, "")
