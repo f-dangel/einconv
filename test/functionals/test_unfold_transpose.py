@@ -34,7 +34,7 @@ from einconv.utils import _tuple
 )
 @mark.parametrize("dev", DEVICES, ids=DEVICE_IDS)
 def test_unfoldNd_transpose(case: Dict, dev: device, simplify: bool):
-    """Compare transpose convolution via matrix-multiplication with built-in one.
+    """Compare transpose convolution via input unfolding with built-in one.
 
     Args:
         case: Dictionary describing the test case.

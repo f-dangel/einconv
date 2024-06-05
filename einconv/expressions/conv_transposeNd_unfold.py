@@ -38,7 +38,7 @@ def einsum_expression(
         stride: Stride of the associated convolution. Can be a single integer (shared
             along all spatial dimensions), or an `N`-tuple of integers. Default: `1`.
         padding: Padding of the associated convolution. Can be a single integer (shared
-            along all spatial dimensions)  or an `N`-tuple of integers, Default: `0`.
+            along all spatial dimensions) or an `N`-tuple of integers, Default: `0`.
         output_padding: The associated convolution's number of unused pixels at the end
             of a spatial dimension. This is required to resolve the ambiguity that a
             convolution can produce the same output shape for different input shapes if
@@ -54,20 +54,18 @@ def einsum_expression(
         Einsum operands in order input, patterns
         Output shape: `[batch_size, out_channels * tot_kernel_size, tot_input_size]`
     """
-    N = x.dim() - 2
+    N = x.ndim - 2
 
     # construct einsum equation
     x_str = "n c_out " + " ".join([f"o{i}" for i in range(N)])
     pattern_strs: List[str] = [f"k{i} o{i} i{i}" for i in range(N)]
     lhs = ",".join([x_str, *pattern_strs])
-
     rhs = (
         "n c_out "
         + " ".join([f"k{i}" for i in range(N)])
         + " "
         + " ".join([f"i{i}" for i in range(N)])
     )
-
     equation = "->".join([lhs, rhs])
     equation = translate_to_torch(equation)
 

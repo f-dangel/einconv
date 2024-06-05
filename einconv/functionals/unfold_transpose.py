@@ -39,7 +39,7 @@ def unfoldNd_transpose(
         stride: Stride of the associated convolution. Can be a single integer (shared
             along all spatial dimensions), or an `N`-tuple of integers. Default: `1`.
         padding: Padding of the associated convolution. Can be a single integer (shared
-            along all spatial dimensions)  or an `N`-tuple of integers, Default: `0`.
+            along all spatial dimensions) or an `N`-tuple of integers, Default: `0`.
         output_padding: The associated convolution's number of unused pixels at the end
             of a spatial dimension. This is required to resolve the ambiguity that a
             convolution can produce the same output shape for different input shapes if
@@ -53,7 +53,7 @@ def unfoldNd_transpose(
 
     Returns:
         Unfolded input tensor of shape \
-        shape `[batch_size, in_channels * tot_kernel_size, tot_input_size]` where \
+        `[batch_size, in_channels * tot_kernel_size, tot_input_size]` where \
         `tot_kernel_size`, `tot_input_size` are the total number of kernel elements and
         spatial input elements to the associated convolution. In `einops` notation, the
         index structure is `n (c_out k1 k2 ...) (i1 i2 ...)`.
