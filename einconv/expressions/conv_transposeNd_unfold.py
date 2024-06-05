@@ -19,9 +19,9 @@ def einsum_expression(
     """Generate einsum expression to unfold the input of a transpose convolution.
 
     The unfolded input for a transpose convolution flattens and concatenates all
-    elements of the input tensor into a matrix such that the transpose convolution
-    can be written as matrix multiplication between the unfolded input and the
-    matricized kernel.
+    elements of the input tensor that overlap with the kernel for a specific output
+    location into a matrix such that the transpose convolution can be written as matrix
+    multiplication between the unfolded input and the matricized kernel.
 
     We will use the associated convolution's hyper-parameters to describe all arguments.
     Consider an `N`d convolution which maps an input tensor of shape

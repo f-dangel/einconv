@@ -22,7 +22,8 @@ def unfoldNd_transpose(
     into a matrix. This matrix can then be used to formulate transpose convolution as
     matrix multiplication between the unfolded input and the matricized kernel.
 
-    This function uses `einsum` under the hood and does not have a PyTorch equivalent.
+    Note:
+        This function uses `einsum` under the hood and does not have a PyTorch equivalent.
 
     We will use the hyper-parameters of an `N`d convolution which maps an input of shape
     `[batch_size, in_channels, *input_sizes]` to an output of shape
