@@ -1,6 +1,5 @@
 """Test ``einconv.simplifications.opt``."""
 
-
 from torch import allclose, einsum, float32, manual_seed, rand
 
 from einconv import index_pattern

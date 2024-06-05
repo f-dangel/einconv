@@ -12,3 +12,34 @@ OUTPUT_SIZE_CASES = [
 ]
 
 OUTPUT_SIZE_IDS = [make_id(case) for case in OUTPUT_SIZE_CASES]
+
+INPUT_SIZE_CASES = [
+    # default hyperparameters
+    {
+        "output_size": 10,
+        "kernel_size": 3,
+        "stride": 1,
+        "padding": 1,
+        "dilation": 1,
+        "output_padding": 0,
+    },
+    # nontrivial hyperparameters
+    {
+        "output_size": 11,
+        "kernel_size": 3,
+        "stride": 2,
+        "padding": 10,
+        "dilation": 2,
+        "output_padding": 1,
+    },
+    # nontrivial hyperparameters (non-overlapping patches)
+    {
+        "output_size": 11,
+        "kernel_size": 4,
+        "stride": 2,
+        "padding": 10,
+        "dilation": 5,
+        "output_padding": 0,
+    },
+]
+INPUT_SIZE_IDS = [make_id(case) for case in INPUT_SIZE_CASES]

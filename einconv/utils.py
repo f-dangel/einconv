@@ -158,3 +158,48 @@ def get_conv_output_size(
     kernel_span = kernel_size + (kernel_size - 1) * (dilation - 1)
 
     return 1 + floor((input_size + padding_left + padding_right - kernel_span) / stride)
+
+
+def get_conv_input_size(
+    output_size: int,
+    kernel_size: int,
+    stride: int,
+    padding: int,
+    output_padding: int,
+    dilation: int,
+) -> int:
+    """Compute the input size of a convolution.
+
+    Args:
+        output_size: Number of output pixels along dimension.
+        kernel_size: Kernel size of the convolution.
+        stride: Stride of the convolution.
+        padding: Padding of the convolution.
+        output_padding: Number of unused pixels at the end.
+        dilation: Dilation of the kernel.
+
+    Returns:
+        Convolution input dimension.
+
+    Raises:
+        ValueError: If the output size re-computed with the determined input size does
+            not match. This indicates that `output_padding` was set too large.
+    """
+    input_size = (
+        (output_size - 1) * stride
+        - 2 * padding
+        + dilation * (kernel_size - 1)
+        + 1
+        + output_padding
+    )
+
+    output_size_recomputed = get_conv_output_size(
+        input_size, kernel_size, stride, padding, dilation
+    )
+    if output_size_recomputed != output_size:
+        raise ValueError(
+            f"Output size {output_size} does not match re-computed output size "
+            f"{output_size_recomputed}."
+        )
+
+    return input_size

@@ -1,4 +1,5 @@
 """PyTorch equivalent of ``nn.Unfold`` implemented as einsum."""
+
 from typing import Tuple, Union
 
 from torch import Tensor

@@ -1,6 +1,5 @@
 """Tests ``einconv.expressions.utils``."""
 
-
 from einconv.expressions.utils import get_letters, translate_to_torch
 
 
