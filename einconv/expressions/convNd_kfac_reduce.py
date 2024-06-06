@@ -2,8 +2,10 @@
 
 KFAC-reduce was introduced by:
 
-- Eschenhagen, R. (2022). Kronecker-factored approximate curvature for linear
-  weight-sharing layers, Master thesis.
+- [Eschenhagen, R., Immer, A., Turner, R. E., Schneider, F., & Hennig, P.
+  (2023). Kronecker-factored approximate curvature for modern neural network
+  architectures. In Advances in Neural Information Processing Systems (NeurIPS)]\
+(https://arxiv.org/abs/2311.00636).
 """
 
 from typing import List, Tuple, Union
@@ -27,6 +29,26 @@ def einsum_expression(
 ) -> Tuple[str, List[Tensor], Tuple[int, ...]]:
     """Generate einsum expression of input-based KFAC-reduce factor for convolution.
 
+    Let $\\mathbf{X}\\in\\mathbb{R}^{C_\\text{in}\\times I_1\\times I_2\\times\\dots}$
+    denote the input of a convolution. The unfolded input $[[\\mathbf{X}]]$
+    has dimension $(C_\\text{in} \\cdot K_1 \\cdot K_2 \\cdots) \\times (O_1 \\cdot O_2
+    \\cdots)$ where $K_i$ and $O_i$ are the kernel and output sizes of the convolution.
+    The input-based KFAC-reduce factor is the batch-averaged outer product
+    of the column-averaged unfolded input,
+
+    $$
+    \\hat{\\mathbf{\\Omega}} =
+    \\frac{1}{B \\cdot (O_1 \\cdot O_2 \\cdots)^2} \\sum_{b=1}^B
+    ( [[\\mathbf{X}_b]]^\\top \\mathbf{1} )
+    ( [[\\mathbf{X}_b]]^\\top \\mathbf{1} )^\\top
+    \\in \\mathbb{R}^{(C_\\text{in} \\cdot K_1 \\cdot K_2 \\cdots) \\times
+    (C_\\text{in} \\cdot K_1 \\cdot K_2 \\cdots)}
+    \\,,
+    $$
+
+    where $B$ is the batch size and $\\mathbf{X}_b$ is the convolution's input from the
+    $b$th data point.
+
     Args:
         x: Convolution input. Has shape ``[batch_size, in_channels, *input_sizes]``
             where ``len(input_sizes) == N``.
@@ -46,8 +68,8 @@ def einsum_expression(
         Einsum equation
         Einsum operands in order un-grouped input, patterns, un-grouped input, \
         patterns, normalization scaling
-        Output shape: ``[groups, in_channels //groups * tot_kernel_sizes,\
-        in_channels //groups * tot_kernel_sizes]``
+        Output shape: ``[groups, in_channels // groups * tot_kernel_sizes,\
+        in_channels // groups * tot_kernel_sizes]``
     """
     N = x.dim() - 2
 
@@ -83,7 +105,7 @@ def einsum_expression(
     x_ungrouped = rearrange(x, "n (g c_in) ... -> n g c_in ...", g=groups)
     output_tot_size = Tensor([p.shape[1] for p in patterns]).int().prod()
     batch_size = x.shape[0]
-    scale = Tensor([1.0 / (batch_size * output_tot_size**2)]).to(x.device).to(x.dtype)
+    scale = Tensor([1.0 / (batch_size * output_tot_size**2)]).to(x.device, x.dtype)
     operands = [x_ungrouped, *patterns, *patterns, x_ungrouped, scale]
 
     # construct output shape

@@ -5,3 +5,4 @@
 :::einconv.expressions.convNd_kfc
 :::einconv.expressions.convNd_kfac_reduce
 :::einconv.expressions.conv_transposeNd_unfold
+:::einconv.expressions.conv_transposeNd_kfac_reduce

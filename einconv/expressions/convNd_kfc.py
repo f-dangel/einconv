@@ -2,8 +2,9 @@
 
 KFC was introduced by:
 
-- Grosse, R., & Martens, J. (2016). A Kronecker-factored approximate Fisher matrix
-  for convolution layers. International Conference on Machine Learning (ICML).
+- [Grosse, R., & Martens, J. (2016). A Kronecker-factored approximate Fisher matrix
+  for convolution layers. International Conference on Machine Learning (ICML).]\
+(https://arxiv.org/abs/1602.01407)
 """
 
 from typing import List, Tuple, Union
@@ -26,6 +27,25 @@ def einsum_expression(
     simplify: bool = True,
 ) -> Tuple[str, List[Tensor], Tuple[int, ...]]:
     """Generate einsum expression of input-based KFC factor for convolution.
+
+    Let $\\mathbf{X}\\in\\mathbb{R}^{C_\\text{in}\\times I_1\\times I_2\\times\\dots}$
+    denote the input of a convolution. The unfolded input $[[\\mathbf{X}]]$
+    has dimension $(C_\\text{in} \\cdot K_1 \\cdot K_2 \\cdots) \\times (O_1 \\cdot O_2
+    \\cdots)$ where $K_i$ and $O_i$ are the kernel and output sizes of the convolution.
+    The input-based KFC factor is the batch-averaged outer product of the unfolded
+    input,
+
+    $$
+    \\mathbf{\\Omega} =
+    \\frac{1}{B} \\sum_{b=1}^B
+    [[\\mathbf{X}_b]] [[\\mathbf{X}_b]]^\\top
+    \\in \\mathbb{R}^{(C_\\text{in} \\cdot K_1 \\cdot K_2 \\cdots) \\times
+    (C_\\text{in} \\cdot K_1 \\cdot K_2 \\cdots)}
+    \\,,
+    $$
+
+    where $B$ is the batch size and $\\mathbf{X}_b$ is the convolution's input from the
+    $b$th data point.
 
     Args:
         x: Convolution input. Has shape ``[batch_size, in_channels, *input_sizes]``
