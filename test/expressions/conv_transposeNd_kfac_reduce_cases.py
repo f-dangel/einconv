@@ -1,4 +1,4 @@
-"""Test cases for einsum expression of input-based TRANSPOSE_KFAC-reduce factor of convolution."""
+"""Test cases for einsum expression of input-based KFAC-reduce for conv. transpose."""
 
 from test.utils import make_id
 
