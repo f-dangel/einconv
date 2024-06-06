@@ -11,6 +11,7 @@ from test.functionals.transpose_unfold_cases import (
 from test.utils import DEVICE_IDS, DEVICES, SIMPLIFIES, SIMPLIFY_IDS, report_nonclose
 from typing import Dict
 
+import unfoldNd
 from einops import einsum, rearrange
 from pytest import mark
 from torch import (
@@ -34,6 +35,38 @@ from einconv.utils import _tuple
 )
 @mark.parametrize("dev", DEVICES, ids=DEVICE_IDS)
 def test_unfoldNd_transpose(case: Dict, dev: device, simplify: bool):
+    """Compare input unfolding for transpose convolution with `unfoldNd` package.
+
+    Args:
+        case: Dictionary describing the test case.
+        dev: Device to execute the test on.
+        simplify: Whether to use a simplified einsum expression.
+    """
+    seed = case["seed"]
+    input_fn = case["input_fn"]
+    kernel_size = case["kernel_size"]
+    kwargs = case["kwargs"]
+
+    manual_seed(seed)
+    inputs = input_fn().to(dev)
+
+    result = unfoldNd.unfold_transposeNd(inputs, kernel_size, **kwargs)
+
+    einconv_result = unfoldNd_transpose(
+        inputs, kernel_size, **kwargs, simplify=simplify
+    )
+
+    report_nonclose(result, einconv_result)
+
+
+@mark.parametrize("simplify", SIMPLIFIES, ids=SIMPLIFY_IDS)
+@mark.parametrize(
+    "case",
+    TRANSPOSE_UNFOLD_1D_CASES + TRANSPOSE_UNFOLD_2D_CASES + TRANSPOSE_UNFOLD_3D_CASES,
+    ids=TRANSPOSE_UNFOLD_1D_IDS + TRANSPOSE_UNFOLD_2D_IDS + TRANSPOSE_UNFOLD_3D_IDS,
+)
+@mark.parametrize("dev", DEVICES, ids=DEVICE_IDS)
+def test_unfoldNd_transpose_via_conv_transpose(case: Dict, dev: device, simplify: bool):
     """Compare transpose convolution via input unfolding with built-in one.
 
     Args:

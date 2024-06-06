@@ -30,6 +30,27 @@ def einsum_expression(
     has shape `[batch_size, out_channels, *output_sizes]` and the output has shape
     `[batch_size, in_channels, *input_sizes]`.
 
+    Let $\\mathbf{X}\\in\\mathbb{R}^{C_\\text{out}\\times O_1\\times O_2\\times\\dots}$
+    denote the input of a transpose convolution, $\\mathbf{W} \\in \\mathbb{R}^{
+    C_\\text{out} \\times C_\\text{in} \\times K_1\\times K_2\\times\\dots}$ its kernel
+    and $\\mathbf{Y}\\in\\mathbb{R}^{C_\\text{in}\\times I_1\\times I_2\\times\\dots}$
+    its output. The unfolded input $[[\\mathbf{X}]]_\\top$ has dimension
+    $(C_\\text{out} \\cdot K_1 \\cdot K_2 \\cdots) \\times (I_1 \\cdot I_2 \\cdots)$ and
+    can be used to express transpose convolution as matrix multiplication,
+
+    $$
+    \\mathrm{mat}(\\mathbf{Y})
+    =
+    \\mathrm{mat}(\\mathbf{W})
+    [[\\mathbf{X})]]_\\top
+    \\,,
+    $$
+
+    where $\\mathrm{mat}(\\mathbf{Y}) \\in \\mathbb{R}^{C_\\text{in}\\times (I_1\\cdot
+    I_2 \\cdots)}$ and $\\mathrm{mat}(\\mathbf{W}) \\in \\mathbb{R}^{C_\\text{in}\\times
+    (C_\\text{out} \\cdot K_1\\cdot K_2 \\cdots)}$ are matrix views of $\\mathbf{Y},
+    \\mathbf{W}$ (note that $\\mathbf{W}$ must also be transposed before matricizing).
+
     Args:
         x: Input to the `N`d transpose convolution. Has shape
             `[batch_size, in_channels, *input_sizes]` where `len(input_sizes) == N`.

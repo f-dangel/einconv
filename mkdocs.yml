@@ -1,8 +1,10 @@
 site_name: Einconv
-site_url: https://example.com # TODO Fill in the link from the hosting platform
+site_url: https://einconv.readthedocs.io
 repo_url: https://github.com/f-dangel/einconv/
 repo_name: f-dangel/einconv
 site_author: Felix Dangel
+watch:
+  - einconv
 nav:
     - Getting Started: index.md
     - Tutorials:

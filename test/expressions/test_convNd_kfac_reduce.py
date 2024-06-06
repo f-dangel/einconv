@@ -50,7 +50,7 @@ def test_einsum_expression(case: Dict, device: torch.device, simplify: bool):
     avg_unfolded_x = unfolded_x.mean(dim=-1)
     groups = kwargs.get("groups", 1)
     avg_unfolded_x = rearrange(avg_unfolded_x, "n (g c_in_k) -> n g c_in_k", g=groups)
-    kfac_unfold = einsum("ngi,ngj->gij", avg_unfolded_x, avg_unfolded_x) / (batch_size)
+    kfac_unfold = einsum("ngi,ngj->gij", avg_unfolded_x, avg_unfolded_x) / batch_size
 
     equation, operands, shape = convNd_kfac_reduce.einsum_expression(
         x, kernel_size, **kwargs, simplify=simplify
