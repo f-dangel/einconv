@@ -116,8 +116,8 @@ def einsum_expression(
     if output_size is not None:
         t_output_size = _tuple(output_size, N)
         t_output_padding = tuple(
-            output_size - get_conv_input_size(I, K, S, P, 0, D)
-            for output_size, I, K, S, P, D in zip(
+            output_size - get_conv_input_size(out, K, S, P, 0, D)
+            for output_size, out, K, S, P, D in zip(
                 t_output_size,
                 conv_output_size,
                 t_kernel_size,
@@ -130,8 +130,8 @@ def einsum_expression(
         t_output_padding = _tuple(output_padding, N)
 
     conv_input_size = tuple(
-        get_conv_input_size(O, K, S, P, output_padding, D)
-        for O, K, S, P, output_padding, D in zip(
+        get_conv_input_size(out, K, S, P, output_padding, D)
+        for out, K, S, P, output_padding, D in zip(
             conv_output_size,
             t_kernel_size,
             t_stride,
