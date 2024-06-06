@@ -68,8 +68,8 @@ def einsum_expression(
         Einsum equation
         Einsum operands in order un-grouped input, patterns, un-grouped input, \
         patterns, normalization scaling
-        Output shape: ``[groups, in_channels //groups * tot_kernel_sizes,\
-        in_channels //groups * tot_kernel_sizes]``
+        Output shape: ``[groups, in_channels // groups * tot_kernel_sizes,\
+        in_channels // groups * tot_kernel_sizes]``
     """
     N = x.dim() - 2
 

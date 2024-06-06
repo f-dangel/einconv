@@ -51,11 +51,9 @@ def test_unfoldNd_transpose(case: Dict, dev: device, simplify: bool):
     inputs = input_fn().to(dev)
 
     result = unfoldNd.unfold_transposeNd(inputs, kernel_size, **kwargs)
-
     einconv_result = unfoldNd_transpose(
         inputs, kernel_size, **kwargs, simplify=simplify
     )
-
     report_nonclose(result, einconv_result)
 
 
